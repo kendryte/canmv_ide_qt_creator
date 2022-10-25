@@ -2,3 +2,6 @@
 	path = src/shared/qbs
 	url = ../../qt-labs/qbs.git
 	ignore = dirty
+[submodule "share/qtcreator/examples"]
+	path = share/qtcreator/examples
+	url = https://github.com/kendryte/canmv_examples.git

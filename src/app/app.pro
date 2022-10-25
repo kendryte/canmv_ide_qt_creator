@@ -47,7 +47,7 @@ win32 {
     #    QMAKE_EXTRA_COMPILERS += ASSETCATALOG
     #}
     #OPENMV-DIFF#
-    ICON = ../../../openmv-media/icons/openmv-icon/openmv.icns
+    ICON = ../../../canmv-media/icons/canmv-icon/canmv.icns
     #OPENMV-DIFF#
     QMAKE_INFO_PLIST = Info.plist
 } else {

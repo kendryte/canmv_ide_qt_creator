@@ -17,15 +17,15 @@
 <!--</Installer>-->
 <!--OPENMV-DIFF-->
 <Installer>
-    <Name>OpenMV IDE</Name>
+    <Name>CanMV IDE</Name>
     <Version>{version}</Version>
-    <Title>OpenMV IDE {display_version}</Title>
-    <Publisher>OpenMV, LLC</Publisher>
-    <ProductUrl>https://openmv.io</ProductUrl>
+    <Title>CanMV IDE {display_version}</Title>
+    <Publisher>Canaan Inc.</Publisher>
+    <ProductUrl>https://canaan-creative.com/</ProductUrl>
 
-    <MaintenanceToolName>OpenMVIDEUninst</MaintenanceToolName>
-    <TargetDir>@ApplicationsDir@/OpenMV IDE</TargetDir>
-    <StartMenuDir>OpenMV IDE</StartMenuDir>
+    <MaintenanceToolName>CanMVIDEUninst</MaintenanceToolName>
+    <TargetDir>@ApplicationsDir@/CanMV IDE</TargetDir>
+    <StartMenuDir>CanMV IDE</StartMenuDir>
     <ControlScript>controlscript.qs</ControlScript>
 </Installer>
 <!--OPENMV-DIFF-->

@@ -17,15 +17,15 @@
 <!--</Installer>-->
 <!--OPENMV-DIFF-->
 <Installer>
-    <Name>OpenMV IDE</Name>
+    <Name>CanMV IDE</Name>
     <Version>{version}</Version>
-    <Title>OpenMV IDE {display_version}</Title>
-    <Publisher>OpenMV, LLC</Publisher>
-    <ProductUrl>https://openmv.io</ProductUrl>
+    <Title>CanMV IDE {display_version}</Title>
+    <Publisher>Canaan Inc.</Publisher>
+    <ProductUrl>https://canaan-creative.com/</ProductUrl>
 
-    <MaintenanceToolName>OpenMVIDEUninstaller</MaintenanceToolName>
-    <TargetDir>@homeDir@/openmvide</TargetDir>
-    <AdminTargetDir>/opt/openmvide</AdminTargetDir>
+    <MaintenanceToolName>CanMVIDEUninstaller</MaintenanceToolName>
+    <TargetDir>@homeDir@/canmvide</TargetDir>
+    <AdminTargetDir>/opt/canmvide</AdminTargetDir>
     <ControlScript>controlscript.qs</ControlScript>
 </Installer>
 <!--OPENMV-DIFF-->

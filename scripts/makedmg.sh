@@ -33,7 +33,7 @@ finalDMGName="$2"
 #OPENMV-DIFF#
 #title="Qt Creator"
 #OPENMV-DIFF#
-title="OpenMV IDE"
+title="CanMV IDE"
 #OPENMV-DIFF#
 
 echo Preparing image artifacts...

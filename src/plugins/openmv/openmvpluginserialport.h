@@ -65,6 +65,11 @@
 #define __USBDBG_TX_INPUT                   0x11
 #define __USBDBG_TIME_INPUT                 0x12
 
+#define __USBDBG_CREATEFILE                 0x20
+#define __USBDBG_WRITEFILE                  0x21
+#define __USBDBG_QUERY_FILE_STAT            0xA0
+#define __USBDBG_VERIFYFILE                 0xA1
+
 #define __BOOTLDR_START                     static_cast<int>(0xABCD0001)
 #define __BOOTLDR_RESET                     static_cast<int>(0xABCD0002)
 #define __BOOTLDR_ERASE                     static_cast<int>(0xABCD0004)
@@ -102,8 +107,8 @@
 #define FW_VERSION_END_DELAY                0
 #define FRAME_SIZE_START_DELAY              0
 #define FRAME_SIZE_END_DELAY                0
-#define FRAME_DUMP_START_DELAY              0
-#define FRAME_DUMP_END_DELAY                0
+#define FRAME_DUMP_START_DELAY              5
+#define FRAME_DUMP_END_DELAY                40
 #define ARCH_STR_START_DELAY                0
 #define ARCH_STR_END_DELAY                  0
 #define LEARN_MTU_START_DELAY               0
@@ -116,8 +121,8 @@
 #define SCRIPT_STOP_END_DELAY               50
 #define SCRIPT_SAVE_START_DELAY             50
 #define SCRIPT_SAVE_END_DELAY               50
-#define SCRIPT_RUNNING_START_DELAY          0
-#define SCRIPT_RUNNING_END_DELAY            0
+#define SCRIPT_RUNNING_START_DELAY          1
+#define SCRIPT_RUNNING_END_DELAY            2
 #define TEMPLATE_SAVE_START_DELAY           50
 #define TEMPLATE_SAVE_END_DELAY             25
 #define TEMPLATE_SAVE_2_START_DELAY         25
@@ -238,6 +243,7 @@ public:
     QString errorString();
     void clearError();
 
+    qint64 read(char *data, qint64 maxSize);
     QByteArray readAll();
     qint64 write(const QByteArray &data);
 
@@ -265,7 +271,8 @@ public:
 
 public slots:
 
-    void open(const QString &portName);
+    // void open(const QString &portName);
+    void open(const QString &portName, int mode, int baud);
     void command(const OpenMVPluginSerialPortCommand &command);
 
     void bootloaderStart(const QString &selectedPort);
@@ -282,6 +289,10 @@ signals:
     void bootloaderResetResponse();
 
 private:
+
+    void changeBoardBaud(int baud);
+    int handshakeBoard(int timeouts);
+    int resetboard(int mode);
 
     void write(const QByteArray &data, int startWait, int stopWait, int timeout);
 
@@ -301,7 +312,8 @@ public:
 
 signals:
 
-    void open(const QString &portName);
+    // void open(const QString &portName);
+    void open(const QString &portName, int mode, int baud);
     void openResult(const QString &errorMessage);
 
     void command(const OpenMVPluginSerialPortCommand &command);

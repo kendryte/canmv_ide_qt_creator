@@ -92,27 +92,39 @@ BASENAME = $$(INSTALL_BASENAME)
 #OPENMV-DIFF#
 #isEmpty(BASENAME): BASENAME = qt-creator-$${PLATFORM}$(INSTALL_EDITION)-$${QTCREATOR_VERSION}$(INSTALL_POSTFIX)
 #OPENMV-DIFF#
-isEmpty(BASENAME): BASENAME = openmv-ide-$${PLATFORM}$(INSTALL_EDITION)-$${OPENMVIDE_VERSION}$(INSTALL_POSTFIX)
+#isEmpty(BASENAME): BASENAME = openmv-ide-$${PLATFORM}$(INSTALL_EDITION)-$${OPENMVIDE_VERSION}$(INSTALL_POSTFIX)
 #OPENMV-DIFF#
+#CANMV-DIFF#
+isEmpty(BASENAME): BASENAME = canmv-ide-$${PLATFORM}$(INSTALL_EDITION)-$${OPENMVIDE_VERSION}$(INSTALL_POSTFIX)
+#CANMV-DIFF#
 
 #OPENMV-DIFF#
 #macx:INSTALLER_NAME = "qt-creator-$${QTCREATOR_VERSION}"
 #OPENMV-DIFF#
 macx:INSTALLER_NAME = "openmv-ide-$${OPENMVIDE_VERSION}"
 #OPENMV-DIFF#
+#CANMV-DIFF#
+macx:INSTALLER_NAME = "canmv-ide-$${OPENMVIDE_VERSION}"
+#CANMV-DIFF#
 else:INSTALLER_NAME = "$${BASENAME}"
 
 macx {
     #OPENMV-DIFF#
     #APPBUNDLE = "$$OUT_PWD/bin/Qt Creator.app"
     #OPENMV-DIFF#
-    APPBUNDLE = "$$OUT_PWD/bin/OpenMV IDE.app"
+    #APPBUNDLE = "$$OUT_PWD/bin/OpenMV IDE.app"
     #OPENMV-DIFF#
+    #CANMV-DIFF#
+    APPBUNDLE = "$$OUT_PWD/bin/CanMV IDE.app"
+    #CANMV-DIFF#
     #OPENMV-DIFF#
     #BINDIST_SOURCE = "$$OUT_PWD/bin/Qt Creator.app"
     #OPENMV-DIFF#
-    BINDIST_SOURCE = "$$OUT_PWD/bin/OpenMV IDE.app"
+    #BINDIST_SOURCE = "$$OUT_PWD/bin/OpenMV IDE.app"
     #OPENMV-DIFF#
+    #CANMV-DIFF#
+    BINDIST_SOURCE = "$$OUT_PWD/bin/CanMV IDE.app"
+    #CANMV-DIFF#
     BINDIST_INSTALLER_SOURCE = $$BINDIST_SOURCE
     deployqt.commands = $$PWD/scripts/deployqtHelper_mac.sh \"$${APPBUNDLE}\" \"$$[QT_INSTALL_TRANSLATIONS]\" \"$$[QT_INSTALL_PLUGINS]\" \"$$[QT_INSTALL_IMPORTS]\" \"$$[QT_INSTALL_QML]\"
     #OPENMV-DIFF#
@@ -147,7 +159,10 @@ isEmpty(INSTALLER_ARCHIVE_FROM_ENV) {
 #bindist.commands = 7z a -mx9 $$OUT_PWD/$${BASENAME}.7z \"$$BINDIST_SOURCE\"
 #OPENMV-DIFF#
 bindist.depends = deployqt
-bindist.commands = python -u $$PWD/scripts/sign.py \"$$BINDIST_INSTALLER_SOURCE\" && mkdir -p \"$$IDE_BUILD_TREE\"/tar.gz/openmvide && cp -r \"$$BINDIST_SOURCE\"/* \"$$IDE_BUILD_TREE\"/tar.gz/openmvide && tar -zcvf $$OUT_PWD/$${BASENAME}.tar.gz -C \"$$IDE_BUILD_TREE\"/tar.gz openmvide
+#CANMV-DIFF#
+#bindist.commands = python -u $$PWD/scripts/sign.py \"$$BINDIST_INSTALLER_SOURCE\" && mkdir -p \"$$IDE_BUILD_TREE\"/tar.gz/openmvide && cp -r \"$$BINDIST_SOURCE\"/* \"$$IDE_BUILD_TREE\"/tar.gz/openmvide && tar -zcvf $$OUT_PWD/$${BASENAME}.tar.gz -C \"$$IDE_BUILD_TREE\"/tar.gz openmvide
+bindist.commands = python -u $$PWD/scripts/sign.py \"$$BINDIST_INSTALLER_SOURCE\" && mkdir -p \"$$IDE_BUILD_TREE\"/tar.gz/canmvide && cp -r \"$$BINDIST_SOURCE\"/* \"$$IDE_BUILD_TREE\"/tar.gz/canmvide && tar -zcvf $$OUT_PWD/$${BASENAME}.tar.gz -C \"$$IDE_BUILD_TREE\"/tar.gz canmvide
+#CANMV-DIFF#
 #OPENMV-DIFF#
 #OPENMV-DIFF#
 ##bindist_installer.depends = deployqt

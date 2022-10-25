@@ -1,8 +1,11 @@
 //OPENMV-DIFF//
 //IDI_ICON1               ICON    DISCARDABLE     "qtcreator.ico"
 //OPENMV-DIFF//
-IDI_ICON1               ICON    DISCARDABLE     "../../../openmv-media/icons/openmv-icon/openmv.ico"
+//IDI_ICON1               ICON    DISCARDABLE     "../../../openmv-media/icons/openmv-icon/openmv.ico"
 //OPENMV-DIFF//
+//CANMV-DIFF//
+IDI_ICON1               ICON    DISCARDABLE     "../../../canmv-media/icons/canmv-icon/canmv.ico"
+//CANMV-DIFF//
 IDI_ICON2               ICON    DISCARDABLE     "winicons/c.ico"
 IDI_ICON3               ICON    DISCARDABLE     "winicons/cpp.ico"
 IDI_ICON4               ICON    DISCARDABLE     "winicons/h.ico"

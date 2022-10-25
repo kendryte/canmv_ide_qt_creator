@@ -61,17 +61,17 @@
 		</dict>
 	</array>
 	<key>NSHumanReadableCopyright</key>
-	<string>(C) 2021 OpenMV, LLC</string>
+	<string>(C) 2022 Canaan Inc.</string>
 	<key>CFBundleIconFile</key>
-	<string>openmv</string>
+	<string>canmv</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleExecutable</key>
-	<string>OpenMV IDE</string>
+	<string>CanMV IDE</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.openmv.openmvide</string>
+	<string>com.canaan-creative.canmvide</string>
 	<key>CFBundleVersion</key>
 	<string>@FULL_VERSION@</string>
 	<key>CFBundleShortVersionString</key>

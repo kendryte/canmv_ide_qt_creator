@@ -39,6 +39,11 @@ namespace Constants {
 #define OMV_IDE_VERSION_STR STRINGIFY(OMV_IDE_VERSION)
 //OPENMV-DIFF//
 
+//CANMV-DIFF
+#define OMV_IDE_GIT_VERSION         $${OMV_IDE_GIT_VERSION}
+#define OMV_IDE_GIT_VERSION_STR     STRINGIFY(OMV_IDE_GIT_VERSION)
+//CANMV-DIFF
+
 #define IDE_VERSION_MAJOR $$replace(QTCREATOR_VERSION, "^(\\d+)\\.\\d+\\.\\d+(-.*)?$", \\1)
 #define IDE_VERSION_MINOR $$replace(QTCREATOR_VERSION, "^\\d+\\.(\\d+)\\.\\d+(-.*)?$", \\1)
 #define IDE_VERSION_RELEASE $$replace(QTCREATOR_VERSION, "^\\d+\\.\\d+\\.(\\d+)(-.*)?$", \\1)
@@ -48,6 +53,8 @@ namespace Constants {
 #define OMV_IDE_VERSION_RELEASE $$replace(OPENMVIDE_VERSION, "^\\d+\\.\\d+\\.(\\d+)(-.*)?$", \\1)
 //OPENMV-DIFF//
 
+const char * const IDE_GIT_VERSION       = OMV_IDE_GIT_VERSION_STR;
+
 const char * const IDE_VERSION_LONG      = IDE_VERSION_STR;
 const char * const IDE_AUTHOR            = \"The Qt Company Ltd\";
 const char * const IDE_YEAR              = \"2021\";
@@ -55,6 +62,12 @@ const char * const IDE_YEAR              = \"2021\";
 const char * const OMV_IDE_VERSION_LONG  = OMV_IDE_VERSION_STR;
 const char * const OMV_IDE_AUTHOR        = \"OpenMV, LLC\";
 const char * const OMV_IDE_YEAR          = \"2021\";
+//OPENMV-DIFF//
+
+//OPENMV-DIFF//
+const char * const CANMV_IDE_VERSION_LONG  = OMV_IDE_VERSION_STR;
+const char * const CANMV_IDE_AUTHOR        = \"Canaan Inc.\";
+const char * const CANMV_IDE_YEAR          = \"2022\";
 //OPENMV-DIFF//
 
 #ifdef IDE_VERSION_DESCRIPTION
@@ -76,8 +89,11 @@ const char * const IDE_SETTINGSVARIANT_STR      = STRINGIFY(IDE_SETTINGSVARIANT)
 //OPENMV-DIFF//
 //const char * const IDE_SETTINGSVARIANT_STR      = \"QtProject\";
 //OPENMV-DIFF//
-const char * const IDE_SETTINGSVARIANT_STR      = \"OpenMV\";
+//const char * const IDE_SETTINGSVARIANT_STR      = \"OpenMV\";
 //OPENMV-DIFF//
+//CanMV-DIFF//
+const char * const IDE_SETTINGSVARIANT_STR      = \"CanMV\";
+//CanMV-DIFF//
 #endif
 
 #ifdef IDE_COPY_SETTINGS_FROM_VARIANT

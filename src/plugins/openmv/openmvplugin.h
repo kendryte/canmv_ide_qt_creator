@@ -9,6 +9,7 @@
 #include <QtNetwork>
 #include <QtSerialPort>
 #include <QtWidgets>
+#include <QComboBox>
 
 #include <coreplugin/actionmanager/actioncontainer.h>
 #include <coreplugin/actionmanager/actionmanager.h>
@@ -67,9 +68,12 @@
 #include "tools/tag36h11.h"
 #include "tools/tag36artoolkit.h"
 #include "tools/videotools.h"
+#include "k210_burn/k210burndialog.h"
 
-#define ICON_PATH ":/openmv/openmv-media/icons/openmv-icon/openmv.png"
-#define SPLASH_PATH ":/openmv/openmv-media/splash/openmv-splash-slate/splash-small.png"
+// #define ICON_PATH ":/openmv/openmv-media/icons/openmv-icon/openmv.png"
+// #define SPLASH_PATH ":/openmv/openmv-media/splash/openmv-splash-slate/splash-small.png"
+#define ICON_PATH ":/openmv/canmv-media/icons/canmv-icon/canmv.png"
+#define SPLASH_PATH ":/openmv/canmv-media/splash/canmv-splash/splash.png"
 #define CONNECT_PATH ":/openmv/images/connect.png"
 #define CONNECT_USB_PATH ":/openmv/images/connect-usb.png"
 #define CONNECT_WIFI_PATH ":/openmv/images/connect-wifi.png"
@@ -81,7 +85,8 @@
 #define NEW_FOLDER_PATH ":/openmv/images/new-folder.png"
 #define SNAPSHOT_PATH ":/openmv/images/snapshot.png"
 
-#define SETTINGS_GROUP "OpenMV"
+//CanMV-DIFF// #define SETTINGS_GROUP "OpenMV"
+#define SETTINGS_GROUP "CanMV"
 #define EDITOR_MANAGER_STATE "EditorManagerState"
 #define MSPLITTER_STATE "MSplitterState"
 #define HSPLITTER_STATE "HSplitterState"
@@ -132,12 +137,19 @@
 #define RESOURCES_MINOR "ResourcesMinor"
 #define RESOURCES_PATCH "ResourcesPatch"
 
+#define RESOURCES_UPDATE_DOMAIN "ResoueceUpdateDomain"
+
+#define LAST_OPEN_FILE_TO_SAVE_PATH "LastOpenFileToSave"
 #define SERIAL_PORT_SETTINGS_GROUP "OpenMVSerialPort"
-#define OPEN_TERMINAL_SETTINGS_GROUP "OpenMVOpenTerminal"
+//CanMV-DIFF// #define OPEN_TERMINAL_SETTINGS_GROUP "OpenMVOpenTerminal"
+#define OPEN_TERMINAL_SETTINGS_GROUP "CanMVOpenTerminal"
 #define OPEN_TERMINAL_DISPLAY_NAME "DisplayName"
 #define OPEN_TERMINAL_OPTION_INDEX "OptionIndex"
 #define OPEN_TERMINAL_COMMAND_STR "CommandStr"
 #define OPEN_TERMINAL_COMMAND_VAL "CommandVal"
+
+#define OPEN_SERIAL_MODE    "DtrRtsMode"
+#define OPEN_SERIAL_BAUD    "IdeBaud"
 
 #define RECONNECTS_MAX 10
 #define OLD_API_MAJOR 1
@@ -187,6 +199,18 @@
 #define FILE_FLUSH_BYTES 1024 // Extra disk activity to flush changes...
 #define FLASH_SECTOR_ERASE 4096 // Flash sector size in bytes.
 #define FOLDER_SCAN_TIME 10000 // in ms
+
+#define USBDBG_SVFILE_ERR_NONE            (1024 + 0)
+#define USBDBG_SVFILE_ERR_PATH_ERR        (1024 + 1)
+#define USBDBG_SVFILE_ERR_CHKSUM_ERR      (1024 + 2)
+#define USBDBG_SVFILE_ERR_WRITE_ERR       (1024 + 3)
+#define USBDBG_SVFILE_ERR_CHUNK_ERR       (1024 + 4)
+
+#define USBDBG_SVFILE_VERIFY_NOT_OPEN     (1024 + 5)
+#define USBDBG_SVFILE_VERIFY_SHA2_ERR     (1024 + 6)
+#define USBDBG_SVFILE_VERIFY_ERR_NONE     (1024 + 7)
+
+#define DISABLE_UNUSED_CODE               (1)
 
 namespace OpenMV {
 namespace Internal {
@@ -266,10 +290,13 @@ public:
 public slots: // private
 
     void registerOpenMVCam(const QString board, const QString id);
+#if (DISABLE_UNUSED_CODE == 0)
     bool registerOpenMVCamDialog(const QString board, const QString id);
-    void packageUpdate();
     void bootloaderClicked();
     void installTheLatestDevelopmentRelease();
+#endif
+
+    void packageUpdate();
     void connectClicked(bool forceBootloader = false,
                         QString forceFirmwarePath = QString(),
                         bool forceFlashFSErase = false,
@@ -281,7 +308,11 @@ public slots: // private
     void processEvents();
     void errorFilter(const QByteArray &data);
     void configureSettings();
+    void burnK210Dialog();
     void saveScript();
+    void saveScriptOverSerial();
+    void saveScriptOverSerialAsBootPy();
+    void saveFileClicked();
     void saveImage(const QPixmap &data);
     void saveTemplate(const QRect &rect);
     void saveDescriptor(const QRect &rect);
@@ -299,6 +330,9 @@ signals:
     void disconnectDone(); // private
 
 private:
+
+    void saveFileOverSerial(const QString &fileName, const QByteArray &fileData);
+    void saveOpenedScript(const QString &fileName);
 
     bool getTheLatestDevelopmentFirmware(const QString &arch, QString *path);
 
@@ -330,6 +364,8 @@ private:
     QString m_portPath;
     QString m_formKey;
 
+    QString m_update_server_domain;
+
     QString m_serialNumberFilter;
     QRegularExpression m_errorFilterRegex;
     QString m_errorFilterString;
@@ -338,9 +374,12 @@ private:
     QAction *m_eraseAction;
     Core::Command *m_openDriveFolderCommand;
     Core::Command *m_configureSettingsCommand;
+    Core::Command *m_k210BurnCommand;
+    Core::Command *m_saveAsBootPyCommand;
+    Core::Command *m_saveFileCommand;
     Core::Command *m_saveCommand;
-    Core::Command *m_resetCommand;
-    Core::Command *m_developmentReleaseCommand;
+    //CANMV-DIFF//Core::Command *m_resetCommand;
+    //CANMV-DIFF//Core::Command *m_developmentReleaseCommand;
     Core::ActionContainer *m_openTerminalMenu;
     Core::Command *m_connectCommand;
     Core::Command *m_disconnectCommand;
@@ -423,7 +462,37 @@ private:
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    bool parseFileContentVersionInfo(const QString &fileName, int *major, int *minor, int *patch)
+    {
+        *major = 0;
+        *minor = 0;
+        *patch = 0;
 
+        QFile file(fileName);
+
+        if(file.open(QIODevice::ReadOnly))
+        {
+            QByteArray data = file.readAll();
+
+            if((file.error() == QFile::NoError) && (!data.isEmpty()))
+            {
+                file.close();
+
+                QRegularExpressionMatch match = QRegularExpression(QStringLiteral("(\\d+)\\.(\\d+)\\.(\\d+)")).match(QString::fromUtf8(data));
+
+                *major = match.captured(1).toInt();
+                *minor = match.captured(2).toInt();
+                *patch = match.captured(3).toInt();
+
+                return true;
+            }
+
+            file.close();
+        }
+
+        return false;
+    }
+    ///////////////////////////////////////////////////////////////////////////
     importDataList_t m_exampleModules;
     importDataList_t m_documentsModules;
 

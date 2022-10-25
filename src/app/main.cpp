@@ -69,8 +69,11 @@ enum { OptionIndent = 4, DescriptionIndent = 34 };
 //OPENMV-DIFF//
 //const char appNameC[] = "Qt Creator";
 //OPENMV-DIFF//
-const char appNameC[] = "OpenMV IDE";
+//const char appNameC[] = "OpenMV IDE";
 //OPENMV-DIFF//
+//CanMV-DIFF//
+const char appNameC[] = "CanMV IDE";
+//CanMV-DIFF//
 const char corePluginNameC[] = "Core";
 const char fixedOptionsC[] =
 " [OPTION]... [FILE]...\n"
@@ -277,8 +280,11 @@ static QSettings *createUserSettings()
                          //OPENMV-DIFF/
                          //QLatin1String("QtCreator"));
                          //OPENMV-DIFF//
-                         QLatin1String("OpenMVIDE"));
+                         //QLatin1String("OpenMVIDE"));
                          //OPENMV-DIFF//
+                         //CANMV_DIFF//
+                         QLatin1String("CanMVIDE"));
+                         //CANMV_DIFF//
 }
 
 static inline QSettings *userSettings()
@@ -447,8 +453,11 @@ int main(int argc, char **argv)
                                               //OPENMV-DIFF//
                                               //QLatin1String("QtCreator"));
                                               //OPENMV-DIFF//
-                                              QLatin1String("OpenMVIDE"));
+                                              //QLatin1String("OpenMVIDE"));
                                               //OPENMV-DIFF//
+                                              //CanMV-DIFF//
+                                              QLatin1String("CanMVIDE"));
+                                              //CanMV-DIFF//
     PluginManager pluginManager;
     PluginManager::setPluginIID(QLatin1String("org.qt-project.Qt.QtCreatorPlugin"));
     PluginManager::setGlobalSettings(globalSettings);

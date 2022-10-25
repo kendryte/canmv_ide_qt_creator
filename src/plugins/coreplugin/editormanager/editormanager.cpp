@@ -1614,7 +1614,8 @@ void EditorManagerPrivate::updateWindowTitleForDocument(IDocument *document, QWi
     }
 
     //OPENMV-DIFF// windowTitle.append(tr("Qt Creator"));
-    windowTitle.append(tr("OpenMV IDE"));
+    //CanMV-DIFF//windowTitle.append(tr("OpenMV IDE"));
+    windowTitle.append(tr("CanMV IDE"));
     window->window()->setWindowTitle(windowTitle);
     window->window()->setWindowFilePath(filePath);
 

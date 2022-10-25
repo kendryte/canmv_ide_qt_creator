@@ -61,8 +61,6 @@ TEMPLATE  = subdirs
 #OPENMV-DIFF#
 SUBDIRS   = \
     coreplugin \
-    imageviewer \
-    minimap \
     tabbededitor \
     texteditor \
     openmv

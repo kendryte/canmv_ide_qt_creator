@@ -22,7 +22,13 @@ HEADERS += openmvplugin.h \
            tools/tag36h11.h \
            tools/tag36artoolkit.h \
            tools/videotools.h \
-           qcustomplot/qcustomplot.h
+           qcustomplot/qcustomplot.h \
+           k210_burn/k210burndialog.h \
+           k210_burn/download/k210burn.h \
+           k210_burn/download/k210burnRam.h \
+           k210_burn/download/k210burnFlash.h \
+           k210_burn/download/util.h \
+           k210_burn/custom_combobox/custom_combobox.h
 SOURCES += openmvplugin.cpp \
            openmveject.cpp \
            openmvpluginserialport.cpp \
@@ -48,6 +54,12 @@ SOURCES += openmvplugin.cpp \
            tools/tag36h11.c \
            tools/tag36artoolkit.c \
            tools/videotools.cpp \
-           qcustomplot/qcustomplot.cpp
-FORMS += openmvcamerasettings.ui histogram/openmvpluginhistogram.ui
+           qcustomplot/qcustomplot.cpp \
+           k210_burn/k210burndialog.cpp \
+           k210_burn/download/k210burn.cpp \
+           k210_burn/download/k210burnRam.cpp \
+           k210_burn/download/k210burnFlash.cpp \
+           k210_burn/download/util.cpp \
+           k210_burn/custom_combobox/custom_combobox.cpp
+FORMS += openmvcamerasettings.ui histogram/openmvpluginhistogram.ui k210_burn/k210burndialog.ui
 RESOURCES += openmv.qrc

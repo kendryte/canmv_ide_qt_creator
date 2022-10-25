@@ -1,5 +1,5 @@
 #include "openmvpluginserialport.h"
-
+#include <QDebug>
 #define OPENMVCAM_BAUD_RATE 12000000
 #define OPENMVCAM_BAUD_RATE_2 921600
 
@@ -190,6 +190,21 @@ void OpenMVPluginSerialPort_thing::clearError()
     }
 }
 
+qint64 OpenMVPluginSerialPort_thing::read(char *data, qint64 maxSize)
+{
+    if(m_serialPort)
+    {
+        return m_serialPort->read(data, maxSize);
+    }
+
+    if(m_tcpSocket)
+    {
+        return m_tcpSocket->read(data, maxSize);
+    }
+
+    return qint64();
+}
+
 QByteArray OpenMVPluginSerialPort_thing::readAll()
 {
     if(m_serialPort)
@@ -318,7 +333,177 @@ OpenMVPluginSerialPort_private::OpenMVPluginSerialPort_private(int override_read
     m_override_read_stall_timeout = override_read_stall_timeout;
 }
 
-void OpenMVPluginSerialPort_private::open(const QString &portName)
+void OpenMVPluginSerialPort_private::changeBoardBaud(int baud)
+{
+    QByteArray cmd_ctrl_c(1, 0x03);
+    write(cmd_ctrl_c, 0, 0, WRITE_TIMEOUT);
+    QThread::msleep(200);
+
+    write(cmd_ctrl_c, 0, 0, WRITE_TIMEOUT);
+    QThread::msleep(200);
+
+    QByteArray cmd0("\r");
+    write(cmd0, 0, 10, WRITE_TIMEOUT);
+    write(cmd0, 0, 10, WRITE_TIMEOUT);
+
+    QByteArray cmd1("from machine import UART\r");
+    write(cmd1, 0, 10, WRITE_TIMEOUT);
+
+    QByteArray cmd2("repl = UART.repl_uart()\r");
+    write(cmd2, 0, 10, WRITE_TIMEOUT);
+
+    // QByteArray cmd3("repl.init(1500000, 8, None, 1, read_buf_len=2048, ide=True)\r\n\r\n");
+    QString strCmd3 = QString(QStringLiteral("repl.init(%1, 8, None, 1, read_buf_len=2048, ide=True)\r")).arg(baud);
+    QByteArray cmd3 = strCmd3.toLatin1();
+
+    write(cmd3, 0, 25, WRITE_TIMEOUT);
+}
+
+int OpenMVPluginSerialPort_private::handshakeBoard(int timeouts)
+{
+    if(m_port)
+    {
+        int responseLen = 4;
+        QByteArray response;
+        QElapsedTimer elaspedTimer;
+        QElapsedTimer elaspedTimer2;
+        QElapsedTimer waitAckTimer;
+
+        waitAckTimer.start();
+        elaspedTimer.start();
+        elaspedTimer2.start();
+
+        m_port->readAll();
+
+        // first send handshake cmd
+        {
+            QByteArray data;
+            serializeByte(data, __USBDBG_CMD);
+            serializeByte(data, 0x8D);
+            serializeLong(data, 4);
+
+            write(data, 2, 10, WRITE_TIMEOUT);
+        }
+
+        do
+        {
+            do
+            {
+                m_port->waitForReadyRead(1);
+                response.append(m_port->readAll());
+
+                if((response.size() < responseLen) && elaspedTimer2.hasExpired(150))
+                {
+                    QByteArray data;
+                    serializeByte(data, __USBDBG_CMD);
+                    serializeByte(data, 0x8D);
+                    serializeLong(data, 4);
+
+                    write(data, 2, 10, WRITE_TIMEOUT);
+
+                    if(m_port)
+                    {
+                        response = response.mid(response.size());
+                        elaspedTimer2.restart();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+            while((response.size() < responseLen) && (!elaspedTimer.hasExpired(300)));
+
+            // if(response.size())
+            //     qDebug() << response.toHex();
+
+            if(response.size() >= responseLen)
+            {
+                int result = deserializeLong(response);
+
+                if((uint32_t)result == 0xFFEEBBAA)
+                {
+                    return 0;
+                }
+                else
+                {
+                    response = response.mid(response.size());
+                    elaspedTimer.restart();
+                    elaspedTimer2.restart();
+                }
+            }
+        } while(!waitAckTimer.hasExpired(timeouts));
+
+        if(waitAckTimer.hasExpired(timeouts)) {
+            return -1;
+        }
+    }
+
+    return -2;
+}
+
+/**
+ *          DTR         RTS
+ * Mode-0   Boot(0)     Rst(0)
+ * Mode-1   Boot(0)     Rst(1)
+ * Mode-2   Boot(1)     Rst(0)
+ * Mode-3   Boot(1)     Rst(1)
+ */
+
+int OpenMVPluginSerialPort_private::resetboard(int mode)
+{
+    if(!m_port) {
+        return -1;
+    }
+
+    switch (mode)
+    {
+    default:
+    case 0:
+        // set boot to vaild, rst to invaild
+        if((!m_port->setDataTerminalReady(true)) || (!m_port->setRequestToSend(false))) {
+            return -1;
+        }
+        QThread::msleep(100); // set rst to 0 and wait 100ms
+        if((!m_port->setDataTerminalReady(true)) || (!m_port->setRequestToSend(true))) {
+            return -1;
+        }
+        break;
+    case 1:
+        // set boot to vaild, rst to invaild
+        if((!m_port->setDataTerminalReady(true)) || (!m_port->setRequestToSend(true))) {
+            return -1;
+        }
+        QThread::msleep(100); // set rst to 0 and wait 100ms
+        if((!m_port->setDataTerminalReady(true)) || (!m_port->setRequestToSend(false))) {
+            return -1;
+        }
+        break;
+    case 2:
+        // set boot to vaild, rst to invaild
+        if((!m_port->setDataTerminalReady(false)) || (!m_port->setRequestToSend(false))) {
+            return -1;
+        }
+        QThread::msleep(100); // set rst to 0 and wait 100ms
+        if((!m_port->setDataTerminalReady(false)) || (!m_port->setRequestToSend(true))) {
+            return -1;
+        }
+        break;
+    case 3:
+        // set boot to vaild, rst to invaild
+        if((!m_port->setDataTerminalReady(false)) || (!m_port->setRequestToSend(true))) {
+            return -1;
+        }
+        QThread::msleep(100); // set rst to 0 and wait 100ms
+        if((!m_port->setDataTerminalReady(false)) || (!m_port->setRequestToSend(false))) {
+            return -1;
+        }
+        break;
+    }
+    return 0;
+}
+
+void OpenMVPluginSerialPort_private::open(const QString &portName, int mode, int baud)
 {
     if(m_port)
     {
@@ -347,29 +532,101 @@ void OpenMVPluginSerialPort_private::open(const QString &portName)
         baudRate2 = ARDUINO_TTR_BAUD_RATE;
     }
 
-    if((!m_port->setBaudRate(baudRate))
-    || (!m_port->open(QIODevice::ReadWrite))
-    || (!m_port->setDataTerminalReady(true)))
-    {
-        delete m_port;
-        m_port = new OpenMVPluginSerialPort_thing(portName, this);
-        // QSerialPort is buggy unless this is set.
-        m_port->setReadBufferSize(1000000);
+    baudRate = 115200;
 
-        if((!m_port->setBaudRate(baudRate2))
-        || (!m_port->open(QIODevice::ReadWrite))
-        || (!m_port->setDataTerminalReady(true)))
-        {
+    bool dtr, rts;
+
+    // judge default dtr and rts setting
+    if(0x00 == mode) {
+        dtr = true;
+        rts = true;
+    } else if(0x01 == mode) {
+        dtr = true;
+        rts = false;
+    } else if(0x02 == mode) {
+        dtr = false;
+        rts = true;
+    } else {
+        dtr = false;
+        rts = false;
+    }
+
+    // if((!m_port->setBaudRate(baudRate))
+    // || (!m_port->open(QIODevice::ReadWrite))
+    // || (!m_port->setDataTerminalReady(dtr))
+    // || (!m_port->setRequestToSend(rts)))
+    if(!m_port->open(QIODevice::ReadWrite))
+    {
+        // delete m_port;
+        // m_port = new OpenMVPluginSerialPort_thing(portName, this);
+        // // QSerialPort is buggy unless this is set.
+        // m_port->setReadBufferSize(1000000);
+
+        // if((!m_port->setBaudRate(baudRate2))
+        // || (!m_port->open(QIODevice::ReadWrite))
+        // || (!m_port->setDataTerminalReady(dtr))
+        // || (!m_port->setRequestToSend(rts)))
+        // {
             emit openResult(m_port->errorString());
             delete m_port;
             m_port = Q_NULLPTR;
+        // }
+    }
+
+    if(!m_port)
+    {
+        return;
+    }
+
+    {
+        // qDebug() << "reset board";
+        // if failed, reset the board
+        if(0x00 != resetboard(mode)) {
+            emit openResult(m_port->errorString());
+            delete m_port;
+            m_port = Q_NULLPTR;
+            return;
+        }
+
+        QThread::msleep(3000);
+
+        // chane baud to 115200
+        if(!m_port->setBaudRate(115200)) {
+            emit openResult(m_port->errorString());
+            delete m_port;
+            m_port = Q_NULLPTR;
+            return;
+        }
+        QThread::msleep(10);
+
+        // qDebug() << "change baud";
+        // send script to change uart baud
+        changeBoardBaud(baud);
+
+        // change baud to 1500000
+        if(!m_port->setBaudRate(baud)) {
+            emit openResult(m_port->errorString());
+            delete m_port;
+            m_port = Q_NULLPTR;
+            return;
+        }
+        QThread::msleep(10); // sleep 200ms for change
+
+        // qDebug() << "handshake";
+        // handshake
+        if(0x00 == handshakeBoard(3000)) {
+            emit openResult(QString());
+            return;
         }
     }
 
     if(m_port)
     {
-        emit openResult(QString());
+        delete m_port;
+        m_port = Q_NULLPTR;
     }
+
+    emit openResult(QString(QStringLiteral("Handshake Failed")));
 }
 
 void OpenMVPluginSerialPort_private::write(const QByteArray &data, int startWait, int stopWait, int timeout)
@@ -529,6 +786,15 @@ void OpenMVPluginSerialPort_private::command(const OpenMVPluginSerialPortCommand
     }
     else if(m_port)
     {
+        static int noRespCnt = 0;
+
+        QByteArray tempData = command.m_data;
+
+        const int flag = deserializeByte(tempData);
+        const int cmd = deserializeByte(tempData);
+
+        QByteArray drop = m_port->readAll();
+
         write(command.m_data, command.m_startWait, command.m_endWait, WRITE_TIMEOUT);
 
         if((!m_port) || (!command.m_responseLen))
@@ -556,7 +822,16 @@ void OpenMVPluginSerialPort_private::command(const OpenMVPluginSerialPortCommand
             QElapsedTimer elaspedTimer;
             QElapsedTimer elaspedTimer2;
             elaspedTimer.start();
-            elaspedTimer2.start();
+
+            if((__USBDBG_CMD == flag) && (__USBDBG_FRAME_DUMP == cmd))
+            {
+                read_timeout = responseLen / 30;
+                read_stall_timeout = responseLen / 60;
+            }
+
+            if((__USBDBG_CMD == flag) && (__USBDBG_QUERY_FILE_STAT != cmd)) {
+                elaspedTimer2.start();
+            }
 
             do
             {
@@ -568,53 +843,80 @@ void OpenMVPluginSerialPort_private::command(const OpenMVPluginSerialPortCommand
                 if((responseLen == command.m_responseLen) && (!data.isEmpty()))
                 {
                     elaspedTimer.restart();
-                    elaspedTimer2.start();
+                    if((__USBDBG_CMD == flag) && (__USBDBG_QUERY_FILE_STAT != cmd)) {
+                        elaspedTimer2.start();
+                    }
                 }
 
-                if(m_port->isSerialPort() && (response.size() < responseLen) && elaspedTimer2.hasExpired(read_stall_timeout))
+                if((__USBDBG_CMD == flag) && \
+                    ((__USBDBG_QUERY_FILE_STAT != cmd) || \
+                        (__USBDBG_FRAME_DUMP != cmd)))
                 {
-                    QByteArray data;
-                    serializeByte(data, __USBDBG_CMD);
-                    serializeByte(data, __USBDBG_SCRIPT_RUNNING);
-                    serializeLong(data, SCRIPT_RUNNING_RESPONSE_LEN);
-                    write(data, SCRIPT_RUNNING_START_DELAY, SCRIPT_RUNNING_END_DELAY, WRITE_TIMEOUT);
+                    if(m_port->isSerialPort() && (response.size() < responseLen) && elaspedTimer2.hasExpired(read_stall_timeout))
+                    {
+                        QByteArray data;
+                        serializeByte(data, __USBDBG_CMD);
+                        serializeByte(data, __USBDBG_SCRIPT_RUNNING);
+                        serializeLong(data, SCRIPT_RUNNING_RESPONSE_LEN);
+                        write(data, SCRIPT_RUNNING_START_DELAY, SCRIPT_RUNNING_END_DELAY, WRITE_TIMEOUT);
 
-                    if(m_port)
-                    {
-                        responseLen += SCRIPT_RUNNING_RESPONSE_LEN;
-                        elaspedTimer2.restart();
+                        if(m_port)
+                        {
+                            responseLen += SCRIPT_RUNNING_RESPONSE_LEN;
+                            elaspedTimer2.restart();
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    else
+
+                    if(m_port->isTCPPort() && (response.size() < responseLen) && elaspedTimer2.hasExpired(read_stall_timeout))
                     {
-                        break;
+                        write(command.m_data, 0, 0, WRITE_TIMEOUT);
+
+                        if(!m_port)
+                        {
+                            break;
+                        }
                     }
                 }
-
-                if(m_port->isTCPPort() && (response.size() < responseLen) && elaspedTimer2.hasExpired(read_stall_timeout))
-                {
-                    write(command.m_data, 0, 0, WRITE_TIMEOUT);
-
-                    if(!m_port)
-                    {
-                        break;
-                    }
-                }
+                QThread::msleep(Utils::HostOsInfo::isMacHost() ? 2 : 1);
             }
             while((response.size() < responseLen) && (!elaspedTimer.hasExpired(read_timeout)));
 
             if(response.size() >= responseLen)
             {
+                if((flag == __USBDBG_CMD) && ((__USBDBG_FRAME_DUMP == cmd) || (__USBDBG_QUERY_FILE_STAT == cmd)))
+                {
+                    noRespCnt = 0;
+                }
                 emit commandResult(OpenMVPluginSerialPortCommandResult(true, response.left(command.m_responseLen)));
             }
             else
             {
-                if(m_port)
-                {
-                    delete m_port;
-                    m_port = Q_NULLPTR;
-                }
+                noRespCnt ++;
 
-                emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
+                if((flag == __USBDBG_CMD) && (noRespCnt < 3) && (cmd == __USBDBG_FRAME_DUMP))
+                {
+                    // if is wait frame dump, maybe lost some data, we ignore the error.
+                    emit commandResult(OpenMVPluginSerialPortCommandResult(true, QByteArray()));
+                }
+                else if((flag == __USBDBG_CMD) && (noRespCnt <= 50) && (cmd == __USBDBG_QUERY_FILE_STAT))
+                {
+                    // if is wait query write file stat, maybe busying write
+                    emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
+                }
+                else
+                {
+                    if(m_port)
+                    {
+                        delete m_port;
+                        m_port = Q_NULLPTR;
+                    }
+
+                    emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
+                }
             }
         }
     }

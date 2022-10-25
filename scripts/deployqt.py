@@ -83,8 +83,11 @@ def is_debug_build(install_dir):
     #OPENMV-DIFF#
     #return is_debug(os.path.join(install_dir, 'bin', 'qtcreator.exe'))
     #OPENMV-DIFF#
-    return is_debug(os.path.join(install_dir, 'bin', 'openmvide.exe'))
+    #return is_debug(os.path.join(install_dir, 'bin', 'openmvide.exe'))
     #OPENMV-DIFF#
+    #CANMV-DIFF#
+    return is_debug(os.path.join(install_dir, 'bin', 'canmvide.exe'))
+    #CANMV-DIFF#
 
 def op_failed(details = None):
     if details != None:

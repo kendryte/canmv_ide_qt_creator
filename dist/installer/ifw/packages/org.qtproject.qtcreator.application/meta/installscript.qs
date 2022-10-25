@@ -56,7 +56,7 @@ Component.prototype.createOperationsForArchive = function(archive)
         //OPENMV-DIFF//
         //component.addOperation("Extract", archive, "@TargetDir@/Qt Creator.app/Contents");
         //OPENMV-DIFF//
-        component.addOperation("Extract", archive, "@TargetDir@/OpenMV IDE.app/Contents");
+        component.addOperation("Extract", archive, "@TargetDir@/CanMV IDE.app/Contents");
         //OPENMV-DIFF//
 }
 
@@ -68,7 +68,7 @@ Component.prototype.beginInstallation = function()
         //OPENMV-DIFF//
         //component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "\\bin\\qtcreator.exe";
         //OPENMV-DIFF//
-        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "\\bin\\openmvide.exe";
+        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "\\bin\\canmvide.exe";
         //OPENMV-DIFF//
         component.qtCreatorBinaryPath = component.qtCreatorBinaryPath.replace(/\//g, "\\");
     }
@@ -76,14 +76,14 @@ Component.prototype.beginInstallation = function()
         //OPENMV-DIFF//
         //component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/bin/qtcreator";
         //OPENMV-DIFF//
-        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/bin/openmvide";
+        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/bin/canmvide";
         //OPENMV-DIFF//
     }
     else if (installer.value("os") == "mac") {
         //OPENMV-DIFF//
         //component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/Qt Creator.app/Contents/MacOS/Qt Creator";
         //OPENMV-DIFF//
-        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/OpenMV IDE.app/Contents/MacOS/OpenMV IDE";
+        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/CanMV IDE.app/Contents/MacOS/CanMV IDE";
         //OPENMV-DIFF//
     }
 
@@ -172,6 +172,8 @@ registerWindowsFileTypeExtensions = function()
                             "ProgId=QtProject.QtCreator.qml");
 }
 
+// Documents at https://doc.qt.io/qtinstallerframework/operations.html
+
 Component.prototype.createOperations = function()
 {
     // Call the base createOperations and afterwards set some registry settings
@@ -183,22 +185,23 @@ Component.prototype.createOperations = function()
                                 //OPENMV-DIFF//
                                 //"@StartMenuDir@/Qt Creator " + installer.value("ProductVersion") + ".lnk",
                                 //OPENMV-DIFF//
-                                "@StartMenuDir@/OpenMV IDE.lnk",
+                                "@StartMenuDir@/CanMV IDE.lnk",
                                 //OPENMV-DIFF//
                                 "workingDirectory=@homeDir@" );
         component.addOperation( "CreateShortcut",
                                 component.qtCreatorBinaryPath,
-                                "@DesktopDir@/OpenMV IDE.lnk",
+                                "@DesktopDir@/CanMV IDE.lnk",
                                 "workingDirectory=@homeDir@" );
         component.addOperation( "CreateShortcut",
-                                "@TargetDir@/OpenMVIDEUninst.exe",
+                                "@TargetDir@/CanMVIDEUninst.exe",
                                 "@StartMenuDir@/Uninstall.lnk",
                                 "workingDirectory=@homeDir@" );
-        component.addElevatedOperation("Execute", "{2,512}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\ftdi\\ftdi.cmd");
-        component.addElevatedOperation("Execute", "{1,256}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\openmv\\openmv.cmd");
-        component.addElevatedOperation("Execute", "{2,768}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\arduino\\arduino.cmd");
+        //CANMV-DIFF// component.addElevatedOperation("Execute", "{2,512}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\ftdi\\ftdi.cmd");
+        //CANMV-DIFF// component.addElevatedOperation("Execute", "{1,256}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\openmv\\openmv.cmd");
+        //CANMV-DIFF// component.addElevatedOperation("Execute", "{2,768}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\arduino\\arduino.cmd");
         //component.addElevatedOperation("Execute", "{1,256}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\pybcdc\\pybcdc.cmd");
-        component.addElevatedOperation("Execute", "{1,256}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\dfuse.cmd");
+        //CANMV-DIFF// component.addElevatedOperation("Execute", "{1,256}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\dfuse.cmd");
+        component.addElevatedOperation("Execute", "{0,256}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\ch343\\ch343.cmd");
         component.addElevatedOperation("Execute", "{0,3010}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\vcr.cmd");
         //OPENMV-DIFF//
 
@@ -229,12 +232,12 @@ Component.prototype.createOperations = function()
                                 //OPENMV-DIFF//
                                 //"QtProject-qtcreator.desktop",
                                 //OPENMV-DIFF//
-                                "OpenMV-openmvide.desktop",
+                                "CanMV-canmvide.desktop",
                                 //OPENMV-DIFF//
                                 //OPENMV-DIFF//
                                 //"Type=Application\nExec=" + component.qtCreatorBinaryPath + "\nPath=@TargetDir@\nName=Qt Creator\nGenericName=The IDE of choice for Qt development.\nGenericName[de]=Die IDE der Wahl zur Qt Entwicklung\nIcon=QtProject-qtcreator\nTerminal=false\nCategories=Development;IDE;Qt;\nMimeType=text/x-c++src;text/x-c++hdr;text/x-xsrc;application/x-designer;application/vnd.nokia.qt.qmakeprofile;application/vnd.nokia.xml.qt.resource;text/x-qml;text/x-qt.qml;text/x-qt.qbs;"
                                 //OPENMV-DIFF//
-                                "Type=Application\nExec=" + component.qtCreatorBinaryPath + "\nPath=@TargetDir@\nName=OpenMV IDE\nGenericName=The IDE of choice for OpenMV Cam Development.\nGenericName[de]=Die IDE der Wahl zur OpenMV Cam Entwicklung\nTerminal=false\nCategories=Development;IDE;\nMimeType=text/x-python;"
+                                "Type=Application\nExec=" + component.qtCreatorBinaryPath + "\nIcon=@TargetDir@/bin/canmv.png\nPath=@TargetDir@\nName=CanMV IDE\nGenericName=The IDE of choice for CanMV Cam Development.\nTerminal=false\nCategories=Development;IDE;\nMimeType=text/x-python;"
                                 //OPENMV-DIFF//
                                 );
         //OPENMV-DIFF//
@@ -307,7 +310,7 @@ Component.prototype.targetChanged = function(text)
             widget.complete = true;
 
             if (installer.value("os") == "win") {
-                if (installer.fileExists(text) && installer.fileExists(text + "/OpenMVIDEUninst.exe")) {
+                if (installer.fileExists(text) && installer.fileExists(text + "/CanMVIDEUninst.exe")) {
                     widget.warning.setText("<p style=\"color: red\">Existing installation detected and will be overwritten.</p>");
                 }
                 else if (installer.fileExists(text)) {
@@ -318,7 +321,7 @@ Component.prototype.targetChanged = function(text)
                 }
             }
             else if (installer.value("os") == "x11") {
-                if (installer.fileExists(text) && installer.fileExists(text + "/OpenMVIDEUninstaller")) {
+                if (installer.fileExists(text) && installer.fileExists(text + "/CanMVIDEUninstaller")) {
                     widget.warning.setText("<p style=\"color: red\">Existing installation detected and will be overwritten.</p>");
                 }
                 else if (installer.fileExists(text)) {
@@ -362,15 +365,15 @@ Component.prototype.licenseCheckPageEntered = function()
     var dir = installer.value("TargetDir");
 
     if (installer.value("os") == "win") {
-        if (installer.fileExists(dir) && installer.fileExists(dir + "/OpenMVIDEUninst.exe")) {
+        if (installer.fileExists(dir) && installer.fileExists(dir + "/CanMVIDEUninst.exe")) {
             installer.execute("cmd.exe", ["/c", "echo function Controller(){gui.clickButton(buttons.NextButton);gui.clickButton(buttons.NextButton);installer.uninstallationFinished.connect(this,this.uninstallationFinished);}Controller.prototype.uninstallationFinished=function(){gui.clickButton(buttons.NextButton);}Controller.prototype.FinishedPageCallback=function(){gui.clickButton(buttons.FinishButton);}> %Temp%\\auto_uninstall.qs"])
-            installer.execute(dir + "/OpenMVIDEUninst.exe", "--script=" + temp + "/auto_uninstall.qs");
+            installer.execute(dir + "/CanMVIDEUninst.exe", "--script=" + temp + "/auto_uninstall.qs");
         }
     }
     else if (installer.value("os") == "x11") {
-        if (installer.fileExists(dir) && installer.fileExists(dir + "/OpenMVIDEUninstaller")) {
+        if (installer.fileExists(dir) && installer.fileExists(dir + "/CanMVIDEUninstaller")) {
             installer.execute("bash", ["-c", "echo 'function Controller(){gui.clickButton(buttons.NextButton);gui.clickButton(buttons.NextButton);installer.uninstallationFinished.connect(this,this.uninstallationFinished);}Controller.prototype.uninstallationFinished=function(){gui.clickButton(buttons.NextButton);}Controller.prototype.FinishedPageCallback=function(){gui.clickButton(buttons.FinishButton);}' > /tmp/auto_uninstall.qs"])
-            installer.execute(dir + "/OpenMVIDEUninstaller", "--script=" + temp + "/auto_uninstall.qs");
+            installer.execute(dir + "/CanMVIDEUninstaller", "--script=" + temp + "/auto_uninstall.qs");
         }
     }
 }

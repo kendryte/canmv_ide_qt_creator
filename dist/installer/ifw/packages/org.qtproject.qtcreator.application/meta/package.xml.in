@@ -3,12 +3,12 @@
     <!--OPENMV-DIFF-->
     <!--<DisplayName>Qt Creator Application</DisplayName>-->
     <!--OPENMV-DIFF-->
-    <DisplayName>OpenMV IDE Application</DisplayName>
+    <DisplayName>CanMV IDE Application</DisplayName>
     <!--OPENMV-DIFF-->
     <!--OPENMV-DIFF-->
     <!--<Description>The IDE of choice for Qt development.</Description>-->
     <!--OPENMV-DIFF-->
-    <Description>The IDE of choice for OpenMV Cam Development.</Description>
+    <Description>The IDE of choice for CanMV Cam Development.</Description>
     <!--OPENMV-DIFF-->
     <Version>{version}</Version>
     <ReleaseDate>{date}</ReleaseDate>

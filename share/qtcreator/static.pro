@@ -28,25 +28,65 @@ STATIC_INSTALL_BASE = $$INSTALL_DATA_PATH
 #macx: DATA_DIRS += scripts
 #OPENMV-DIFF#
 DATA_DIRS = \
-    examples \
     firmware \
     html \
-    models \
     styles \
     themes
-win32: DATA_DIRS += drivers dfuse ffmpeg/windows dfu-util/windows bossac/windows picotool/windows
-else: DATA_DIRS += pydfu
-macx: DATA_DIRS += ffmpeg/mac dfu-util/osx bossac/osx picotool/osx
-linux-*:contains(QT_ARCH, i386): DATA_DIRS += ffmpeg/linux-x86 dfu-util/linux32 bossac/linux32 picotool/linux32
-linux-*:contains(QT_ARCH, x86_64): DATA_DIRS += ffmpeg/linux-x86_64 dfu-util/linux64 bossac/linux64 picotool/linux64
-linux-*:contains(QT_ARCH, arm): DATA_DIRS += ffmpeg/linux-arm dfu-util/arm bossac/arm picotool/arm
+    #CANMV-DIFF #models \
+
+EXAMPLES_DIRS = examples
+
+#CANMV-DIFF
+#win32: DATA_DIRS += drivers dfuse ffmpeg/windows dfu-util/windows bossac/windows picotool/windows
+#else: DATA_DIRS += pydfu
+#macx: DATA_DIRS += ffmpeg/mac dfu-util/osx bossac/osx picotool/osx
+#linux-*:contains(QT_ARCH, i386): DATA_DIRS += ffmpeg/linux-x86 dfu-util/linux32 bossac/linux32 picotool/linux32
+#linux-*:contains(QT_ARCH, x86_64): DATA_DIRS += ffmpeg/linux-x86_64 dfu-util/linux64 bossac/linux64 picotool/linux64
+#linux-*:contains(QT_ARCH, arm): DATA_DIRS += ffmpeg/linux-arm dfu-util/arm bossac/arm picotool/arm
 #OPENMV-DIFF#
+
+win32: DATA_DIRS += drivers ffmpeg/windows
+macx: DATA_DIRS += ffmpeg/mac
+linux-*:contains(QT_ARCH, i386): DATA_DIRS += ffmpeg/linux-x86
+linux-*:contains(QT_ARCH, x86_64): DATA_DIRS += ffmpeg/linux-x86_64
+linux-*:contains(QT_ARCH, arm): DATA_DIRS += ffmpeg/linux-arm
+#CANMV-DIFF
 
 for(data_dir, DATA_DIRS) {
     files = $$files($$PWD/$$data_dir/*, true)
     # Info.plist.in are handled below
     for(file, files):!contains(file, ".*/Info\\.plist\\.in$"):!exists($$file/*): \
         STATIC_FILES += $$file
+}
+
+for(data_dir, EXAMPLES_DIRS) {
+    files = $$files($$PWD/$$data_dir/*, true)
+
+    for(file, files) {
+        !exists($$file/*) {
+            !contains(file, ^.*NOT-Support.*$) {
+                contains(file, ^.*\.py) {
+                    STATIC_FILES += $$file
+                }
+
+                contains(file, ^.*\.txt) {
+                    STATIC_FILES += $$file
+                }
+
+                contains(file, ^.*\.link) {
+                    STATIC_FILES += $$file
+                }
+
+                # for kpu demo.
+                contains(file, ^.*\.kmodel) {
+                    STATIC_FILES += $$file
+                }
+                contains(file, ^.*\.bin) {
+                    STATIC_FILES += $$file
+                }
+            }
+        }
+    }
 }
 
 include(../../qtcreatordata.pri)

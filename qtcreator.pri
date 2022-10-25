@@ -9,6 +9,12 @@ OPENMVIDE_COMPAT_VERSION = 2.9.2
 #OPENMV-DIFF#
 BINARY_ARTIFACTS_BRANCH = 4.0
 
+#CANMV-DIFF#
+isEmpty(OMV_IDE_GIT_VERSION) {
+    OMV_IDE_GIT_VERSION = debug
+}
+#CANMV-DIFF#
+
 # enable c++11
 CONFIG += c++11
 
@@ -83,8 +89,11 @@ osx {
     #OPENMV-DIFF#
     #IDE_APP_TARGET   = "Qt Creator"
     #OPENMV-DIFF#
-    IDE_APP_TARGET   = "OpenMV IDE"
+    #IDE_APP_TARGET   = "OpenMV IDE"
     #OPENMV-DIFF#
+    #CANMV-DIFF#
+    IDE_APP_TARGET   = "CanMV IDE"
+    #CANMV-DIFF#
 
     IDE_APP_BUNDLE = $$IDE_APP_PATH/$${IDE_APP_TARGET}.app
 
@@ -106,8 +115,11 @@ osx {
     #OPENMV-DIFF#
     #IDE_APP_TARGET   = qtcreator
     #OPENMV-DIFF#
-    IDE_APP_TARGET   = openmvide
+    #IDE_APP_TARGET   = openmvide
     #OPENMV-DIFF#
+    #CANMV-DIFF#
+    IDE_APP_TARGET   = canmvide
+    #CANMV-DIFF#
 
     # target output path if not set manually
     isEmpty(IDE_OUTPUT_PATH): IDE_OUTPUT_PATH = $$IDE_BUILD_TREE

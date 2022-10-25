@@ -29,7 +29,7 @@
    <item>
     <widget class="QLabel" name="description">
      <property name="text">
-      <string>Please specify the directory where OpenMV IDE will be installed.</string>
+      <string>Please specify the directory where CanMV IDE will be installed.</string>
      </property>
     </widget>
    </item>

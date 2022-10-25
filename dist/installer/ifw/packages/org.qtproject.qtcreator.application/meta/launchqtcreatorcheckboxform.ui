@@ -20,7 +20,7 @@
       <!--OPENMV-DIFF-->
       <!--<string>Launch Qt Creator</string>-->
       <!--OPENMV-DIFF-->
-      <string>Launch OpenMV IDE</string>
+      <string>Launch CanMV IDE</string>
       <!--OPENMV-DIFF-->
      </property>
      <property name="checked">

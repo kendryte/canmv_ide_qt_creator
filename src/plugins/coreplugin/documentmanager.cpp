@@ -1274,8 +1274,11 @@ void readSettings()
         //OPENMV-DIFF//
         //d->m_projectsDirectory = PathChooser::homePath();
         //OPENMV-DIFF//
-        d->m_projectsDirectory = PathChooser::homePath() + QStringLiteral("/OpenMV");
+        // d->m_projectsDirectory = PathChooser::homePath() + QStringLiteral("/OpenMV");
         //OPENMV-DIFF//
+        //CANMV-DIFF//
+        d->m_projectsDirectory = PathChooser::homePath() + QStringLiteral("/CanMV");
+        //CANMV-DIFF//
     d->m_useProjectsDirectory = s->value(QLatin1String(useProjectDirectoryKeyC),
                                          d->m_useProjectsDirectory).toBool();
 

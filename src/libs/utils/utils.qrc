@@ -15,5 +15,6 @@
         <file>images/progressindicator_small@2x.png</file>
         <file>images/triangle_vert.png</file>
         <file>tooltip/images/f1.png</file>
+        <file>mimetypes/freedesktop.org.xml</file>
     </qresource>
 </RCC>

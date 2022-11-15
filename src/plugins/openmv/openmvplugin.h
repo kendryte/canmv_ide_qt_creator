@@ -308,6 +308,7 @@ public slots: // private
     void processEvents();
     void errorFilter(const QByteArray &data);
     void configureSettings();
+    void updateExamples(QString &downloadUrl);
     void burnK210Dialog();
     void saveScript();
     void saveScriptOverSerial();

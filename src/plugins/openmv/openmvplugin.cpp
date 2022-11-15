@@ -965,9 +965,29 @@ void OpenMVPlugin::extensionsInitialized()
     examplesMenu->setOnAllDisabledBehavior(Core::ActionContainer::Show);
     connect(filesMenu->menu(), &QMenu::aboutToShow, this, [this, examplesMenu] {
         examplesMenu->menu()->clear();
+
+        // // Add Update examples menu
+        // QAction *updateFromGiteeAction = new QAction(tr("Update From Gitee"), examplesMenu->menu());
+        // connect(updateFromGiteeAction, &QAction::triggered, this, [this] {
+        //     QMessageBox::critical(Core::ICore::dialogParent(),
+        //         tr("Update Examples"),
+        //         tr("Todo..."));
+        // });
+
+        QAction *updateFromGithubAction = new QAction(tr("Update From Github"), examplesMenu->menu());
+        connect(updateFromGithubAction, &QAction::triggered, this, [this] {
+            QString examples = QStringLiteral("https://github.com/kendryte/canmv_examples/archive/refs/heads/main.zip");
+
+            updateExamples(examples);
+        });
+
+        // examplesMenu->menu()->addAction(updateFromGiteeAction);
+        examplesMenu->menu()->addAction(updateFromGithubAction);
+        examplesMenu->menu()->addSeparator();
+
         QMap<QString, QAction *> actions = aboutToShowExamplesRecursive(Core::ICore::userResourcePath() + QStringLiteral("/examples"), examplesMenu->menu());
         examplesMenu->menu()->addActions(actions.values());
-        examplesMenu->menu()->setDisabled(actions.values().isEmpty());
+        // examplesMenu->menu()->setDisabled(actions.values().isEmpty());
     });
 
     Core::ActionContainer *toolsMenu = Core::ActionManager::actionContainer(Core::Constants::M_TOOLS);
@@ -7215,6 +7235,127 @@ void OpenMVPlugin::configureSettings()
     }
 }
 
+void OpenMVPlugin::updateExamples(QString &downloadUrl)
+{
+    QMessageBox box(QMessageBox::Information, tr("Update Examples"), tr("Force updare CanMV IDE examples?"), QMessageBox::Cancel, Core::ICore::dialogParent(),
+        Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
+        (Utils::HostOsInfo::isMacHost() ? Qt::WindowType(0) : Qt::WindowCloseButtonHint));
+    QPushButton *button = box.addButton(tr("Install"), QMessageBox::AcceptRole);
+    box.setDefaultButton(button);
+    box.setEscapeButton(QMessageBox::Cancel);
+    box.exec();
+
+    if(box.clickedButton() == button)
+    {
+        QProgressDialog *dialog = new QProgressDialog(tr("Downloading..."), tr("Cancel"), 0, 0, Core::ICore::dialogParent(),
+            Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::CustomizeWindowHint |
+            (Utils::HostOsInfo::isMacHost() ? Qt::WindowType(0) : Qt::WindowType(0)));
+        dialog->setWindowModality(Qt::ApplicationModal);
+        dialog->setAttribute(Qt::WA_ShowWithoutActivating);
+        dialog->setAutoClose(false);
+
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        qDebug() << manager->supportedSchemes();
+
+        connect(manager, &QNetworkAccessManager::finished, this, [this, manager, dialog] (QNetworkReply *reply) {
+            QByteArray data = reply->error() == QNetworkReply::NoError ? reply->readAll() : QByteArray();
+
+            if((reply->error() == QNetworkReply::NoError) && (!data.isEmpty()))
+            {
+                dialog->setLabelText(tr("Installing..."));
+                dialog->setRange(0, 0);
+                dialog->setCancelButton(Q_NULLPTR);
+
+                bool ok = true;
+
+                QString error;
+                QString examplesPath = Core::ICore::userResourcePath() + QStringLiteral("/examples");
+
+                if(!removeRecursivelyWrapper(Utils::FileName::fromString(examplesPath), &error))
+                {
+                    QMessageBox::critical(Core::ICore::dialogParent(),
+                        QString(),
+                        error + tr("\n\nPlease close any programs that are viewing/editing CanMV IDE's application data and then restart CanMV IDE!"));
+
+                    QApplication::quit();
+                    ok = false;
+                }
+                else
+                {
+                    if(!extractAllWrapper(&data, Core::ICore::userResourcePath()))
+                    {
+                        QMessageBox::critical(Core::ICore::dialogParent(),
+                            QString(),
+                            tr("Please close any programs that are viewing/editing CanMV IDE's application data and then restart CanMV IDE!"));
+
+                        QApplication::quit();
+                        ok = false;
+                    }
+                    else
+                    {
+                        QString oldPath = Core::ICore::userResourcePath() + QStringLiteral("/canmv_examples-main");
+
+                        QDir oldDir(oldPath);
+	                    if (oldDir.exists())
+                        {
+                            oldDir.rename(oldPath, examplesPath);
+                        }
+                    }
+                }
+
+                if(ok)
+                {
+                    QMessageBox::information(Core::ICore::dialogParent(),
+                        QString(),
+                        tr("Installation Sucessful! Please restart CanMV IDE."));
+
+                    QApplication::quit();
+                }
+            }
+            else if((reply->error() != QNetworkReply::NoError) && (reply->error() != QNetworkReply::OperationCanceledError))
+            {
+                QMessageBox::critical(Core::ICore::dialogParent(),
+                    tr("Update Examples"),
+                    tr("Error: %L1!").arg(reply->errorString()));
+            }
+            else if(reply->error() != QNetworkReply::OperationCanceledError)
+            {
+                QMessageBox::critical(Core::ICore::dialogParent(),
+                    tr("Update Examples"),
+                    tr("Cannot open the resources file \"%L1\"!").arg(reply->request().url().toString()));
+            }
+
+            connect(reply, &QNetworkReply::destroyed, manager, &QNetworkAccessManager::deleteLater); reply->deleteLater();
+
+            delete dialog;
+        });
+
+        QNetworkRequest request = QNetworkRequest(QUrl(downloadUrl));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
+        request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+#endif
+        QNetworkReply *reply = manager->get(request);
+
+        if(reply)
+        {
+            connect(dialog, &QProgressDialog::canceled, reply, &QNetworkReply::abort);
+            connect(reply, &QNetworkReply::sslErrors, reply, static_cast<void (QNetworkReply::*)(void)>(&QNetworkReply::ignoreSslErrors));
+            connect(reply, &QNetworkReply::downloadProgress, this, [this, dialog] (qint64 bytesReceived, qint64 bytesTotal) {
+                dialog->setMaximum(bytesTotal);
+                dialog->setValue(bytesReceived);
+            });
+
+            dialog->show();
+        }
+        else
+        {
+            QMessageBox::critical(Core::ICore::dialogParent(),
+                tr("Update Examples"),
+                tr("Network request failed \"%L1\"!").arg(request.url().toString()));
+        }
+    }
+}
+
 void OpenMVPlugin::burnK210Dialog()
 {
     if(!m_working)
@@ -8062,6 +8203,8 @@ void OpenMVPlugin::updateCam(bool forceYes)
 
 void OpenMVPlugin::setPortPath(bool silent)
 {
+    return;
+
     if(!m_working)
     {
         QStringList drives;

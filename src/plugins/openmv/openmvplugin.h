@@ -69,6 +69,7 @@
 #include "tools/tag36artoolkit.h"
 #include "tools/videotools.h"
 #include "k210_burn/k210burndialog.h"
+#include "git/git-client.h"
 
 // #define ICON_PATH ":/openmv/openmv-media/icons/openmv-icon/openmv.png"
 // #define SPLASH_PATH ":/openmv/openmv-media/splash/openmv-splash-slate/splash-small.png"
@@ -308,7 +309,8 @@ public slots: // private
     void processEvents();
     void errorFilter(const QByteArray &data);
     void configureSettings();
-    void updateExamples(QString &downloadUrl);
+    void updateExamples(const QByteArray &repoUrl);
+    bool copyDirectoryRecursively(const QString& srcPath, const QString& dstPath, bool coverFileIfExist);
     void burnK210Dialog();
     void saveScript();
     void saveScriptOverSerial();

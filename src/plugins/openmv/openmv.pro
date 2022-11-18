@@ -28,7 +28,9 @@ HEADERS += openmvplugin.h \
            k210_burn/download/k210burnRam.h \
            k210_burn/download/k210burnFlash.h \
            k210_burn/download/util.h \
-           k210_burn/custom_combobox/custom_combobox.h
+           k210_burn/custom_combobox/custom_combobox.h \
+           git/git-client.h \
+
 SOURCES += openmvplugin.cpp \
            openmveject.cpp \
            openmvpluginserialport.cpp \
@@ -60,6 +62,8 @@ SOURCES += openmvplugin.cpp \
            k210_burn/download/k210burnRam.cpp \
            k210_burn/download/k210burnFlash.cpp \
            k210_burn/download/util.cpp \
-           k210_burn/custom_combobox/custom_combobox.cpp
+           k210_burn/custom_combobox/custom_combobox.cpp \
+           git/git-client.cpp \
+
 FORMS += openmvcamerasettings.ui histogram/openmvpluginhistogram.ui k210_burn/k210burndialog.ui
 RESOURCES += openmv.qrc

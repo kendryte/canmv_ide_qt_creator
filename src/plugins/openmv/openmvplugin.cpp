@@ -5,6 +5,7 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QCryptographicHash>
+#include <QTemporaryDir>
 
 namespace OpenMV {
 namespace Internal {
@@ -966,22 +967,18 @@ void OpenMVPlugin::extensionsInitialized()
     connect(filesMenu->menu(), &QMenu::aboutToShow, this, [this, examplesMenu] {
         examplesMenu->menu()->clear();
 
-        // // Add Update examples menu
-        // QAction *updateFromGiteeAction = new QAction(tr("Update From Gitee"), examplesMenu->menu());
-        // connect(updateFromGiteeAction, &QAction::triggered, this, [this] {
-        //     QMessageBox::critical(Core::ICore::dialogParent(),
-        //         tr("Update Examples"),
-        //         tr("Todo..."));
-        // });
+        // Add Update examples menu
+        QAction *updateFromGiteeAction = new QAction(tr("Update From Gitee"), examplesMenu->menu());
+        connect(updateFromGiteeAction, &QAction::triggered, this, [this] {
+            updateExamples(QByteArrayLiteral("https://gitee.com/kendryte/canmv_examples.git"));
+        });
 
         QAction *updateFromGithubAction = new QAction(tr("Update From Github"), examplesMenu->menu());
         connect(updateFromGithubAction, &QAction::triggered, this, [this] {
-            QString examples = QStringLiteral("https://github.com/kendryte/canmv_examples/archive/refs/heads/main.zip");
-
-            updateExamples(examples);
+            updateExamples(QByteArrayLiteral("https://github.com/kendryte/canmv_examples.git"));
         });
 
-        // examplesMenu->menu()->addAction(updateFromGiteeAction);
+        examplesMenu->menu()->addAction(updateFromGiteeAction);
         examplesMenu->menu()->addAction(updateFromGithubAction);
         examplesMenu->menu()->addSeparator();
 
@@ -7235,7 +7232,53 @@ void OpenMVPlugin::configureSettings()
     }
 }
 
-void OpenMVPlugin::updateExamples(QString &downloadUrl)
+bool OpenMVPlugin::copyDirectoryRecursively(const QString& srcPath, const QString& dstPath, bool coverFileIfExist)
+{
+    QDir srcDir(srcPath);
+    QDir dstDir(dstPath);
+
+    if (!dstDir.exists())
+    {
+        if (!dstDir.mkdir(dstDir.absolutePath()))
+        {
+            return false;
+        }
+    }
+
+    QFileInfoList fileInfoList = srcDir.entryInfoList();
+
+    foreach(QFileInfo fileInfo, fileInfoList)
+    {
+        if (fileInfo.fileName() == QStringLiteral(".") || fileInfo.fileName() == QStringLiteral(".."))
+        {
+            continue;
+        }
+
+        if (fileInfo.isDir())
+        {
+            if (!copyDirectoryRecursively(fileInfo.filePath(),dstDir.filePath(fileInfo.fileName()),coverFileIfExist))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (coverFileIfExist && dstDir.exists(fileInfo.fileName()))
+            {
+                dstDir.remove(fileInfo.fileName());
+            }
+
+            if (!QFile::copy(fileInfo.filePath(), dstDir.filePath(fileInfo.fileName())))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+void OpenMVPlugin::updateExamples(const QByteArray &repoUrl)
 {
     QMessageBox box(QMessageBox::Information, tr("Update Examples"), tr("Force updare CanMV IDE examples?"), QMessageBox::Cancel, Core::ICore::dialogParent(),
         Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
@@ -7254,19 +7297,28 @@ void OpenMVPlugin::updateExamples(QString &downloadUrl)
         dialog->setAttribute(Qt::WA_ShowWithoutActivating);
         dialog->setAutoClose(false);
 
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-        qDebug() << manager->supportedSchemes();
+        Git::GitClient *git = new Git::GitClient;
+        Utils::FileName gitExe = git->gitBinary();
 
-        connect(manager, &QNetworkAccessManager::finished, this, [this, manager, dialog] (QNetworkReply *reply) {
-            QByteArray data = reply->error() == QNetworkReply::NoError ? reply->readAll() : QByteArray();
+        QTemporaryDir dir;
 
-            if((reply->error() == QNetworkReply::NoError) && (!data.isEmpty()))
+        if (dir.isValid() && gitExe.exists())
+        {
+            QString tmpDir = dir.path();
+
+            dialog->show();
+
+            QStringList arguments;
+            arguments << QLatin1String("-b") << QLatin1String("main");
+            arguments << QLatin1String("--depth") << QLatin1String("1");
+
+            bool ok = git->cloneRepository(tmpDir, repoUrl, arguments);
+
+            if(ok)
             {
                 dialog->setLabelText(tr("Installing..."));
                 dialog->setRange(0, 0);
                 dialog->setCancelButton(Q_NULLPTR);
-
-                bool ok = true;
 
                 QString error;
                 QString examplesPath = Core::ICore::userResourcePath() + QStringLiteral("/examples");
@@ -7282,7 +7334,7 @@ void OpenMVPlugin::updateExamples(QString &downloadUrl)
                 }
                 else
                 {
-                    if(!extractAllWrapper(&data, Core::ICore::userResourcePath()))
+                    if(!copyDirectoryRecursively(tmpDir, examplesPath, true))
                     {
                         QMessageBox::critical(Core::ICore::dialogParent(),
                             QString(),
@@ -7290,16 +7342,6 @@ void OpenMVPlugin::updateExamples(QString &downloadUrl)
 
                         QApplication::quit();
                         ok = false;
-                    }
-                    else
-                    {
-                        QString oldPath = Core::ICore::userResourcePath() + QStringLiteral("/canmv_examples-main");
-
-                        QDir oldDir(oldPath);
-	                    if (oldDir.exists())
-                        {
-                            oldDir.rename(oldPath, examplesPath);
-                        }
                     }
                 }
 
@@ -7312,47 +7354,23 @@ void OpenMVPlugin::updateExamples(QString &downloadUrl)
                     QApplication::quit();
                 }
             }
-            else if((reply->error() != QNetworkReply::NoError) && (reply->error() != QNetworkReply::OperationCanceledError))
+            else
             {
                 QMessageBox::critical(Core::ICore::dialogParent(),
                     tr("Update Examples"),
-                    tr("Error: %L1!").arg(reply->errorString()));
+                    tr("Clone repo Failed!"));
             }
-            else if(reply->error() != QNetworkReply::OperationCanceledError)
-            {
-                QMessageBox::critical(Core::ICore::dialogParent(),
-                    tr("Update Examples"),
-                    tr("Cannot open the resources file \"%L1\"!").arg(reply->request().url().toString()));
-            }
-
-            connect(reply, &QNetworkReply::destroyed, manager, &QNetworkAccessManager::deleteLater); reply->deleteLater();
-
-            delete dialog;
-        });
-
-        QNetworkRequest request = QNetworkRequest(QUrl(downloadUrl));
-#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
-        request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
-#endif
-        QNetworkReply *reply = manager->get(request);
-
-        if(reply)
-        {
-            connect(dialog, &QProgressDialog::canceled, reply, &QNetworkReply::abort);
-            connect(reply, &QNetworkReply::sslErrors, reply, static_cast<void (QNetworkReply::*)(void)>(&QNetworkReply::ignoreSslErrors));
-            connect(reply, &QNetworkReply::downloadProgress, this, [this, dialog] (qint64 bytesReceived, qint64 bytesTotal) {
-                dialog->setMaximum(bytesTotal);
-                dialog->setValue(bytesReceived);
-            });
-
-            dialog->show();
+            dir.remove();
         }
-        else
+        else if(!gitExe.exists())
         {
             QMessageBox::critical(Core::ICore::dialogParent(),
                 tr("Update Examples"),
-                tr("Network request failed \"%L1\"!").arg(request.url().toString()));
+                tr("Can not Foun git, Please Install git to System PATH"));
         }
+
+        delete git;
+        delete dialog;
     }
 }
 

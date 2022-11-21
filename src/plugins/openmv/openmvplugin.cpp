@@ -7283,7 +7283,7 @@ void OpenMVPlugin::updateExamples(const QByteArray &repoUrl)
     QMessageBox box(QMessageBox::Information, tr("Update Examples"), tr("Force updare CanMV IDE examples?"), QMessageBox::Cancel, Core::ICore::dialogParent(),
         Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
         (Utils::HostOsInfo::isMacHost() ? Qt::WindowType(0) : Qt::WindowCloseButtonHint));
-    QPushButton *button = box.addButton(tr("Install"), QMessageBox::AcceptRole);
+    QPushButton *button = box.addButton(tr("Update"), QMessageBox::AcceptRole);
     box.setDefaultButton(button);
     box.setEscapeButton(QMessageBox::Cancel);
     box.exec();
@@ -7366,7 +7366,7 @@ void OpenMVPlugin::updateExamples(const QByteArray &repoUrl)
         {
             QMessageBox::critical(Core::ICore::dialogParent(),
                 tr("Update Examples"),
-                tr("Can not Foun git, Please Install git to System PATH"));
+                tr("<p>Can not Foun git, Please Install git to System PATH</p>") + tr("<p>You can download git from <a href=\"https://git-scm.com\">https://git-scm.com</a></p>"));
         }
 
         delete git;

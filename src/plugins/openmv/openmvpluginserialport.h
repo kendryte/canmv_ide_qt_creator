@@ -291,7 +291,8 @@ signals:
 private:
 
     void changeBoardBaud(int baud);
-    int handshakeBoard(int timeouts);
+    int waitMpyPrompt(int timeout_ms);
+    int handshakeBoard(int timeout_ms);
     int resetboard(int mode);
 
     void write(const QByteArray &data, int startWait, int stopWait, int timeout);

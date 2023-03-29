@@ -353,13 +353,42 @@ void OpenMVPluginSerialPort_private::changeBoardBaud(int baud)
     write(cmd2, 0, 10, WRITE_TIMEOUT);
 
     // QByteArray cmd3("repl.init(1500000, 8, None, 1, read_buf_len=2048, ide=True)\r\n\r\n");
-    QString strCmd3 = QString(QStringLiteral("repl.init(%1, 8, None, 1, read_buf_len=2048, ide=True)\r")).arg(baud);
-    QByteArray cmd3 = strCmd3.toLatin1();
-
+    QByteArray cmd3 = QString(QStringLiteral("repl.init(%1, 8, None, 1, read_buf_len=2048, ide=True)\r")).arg(baud).toLatin1();
     write(cmd3, 0, 25, WRITE_TIMEOUT);
 }
 
-int OpenMVPluginSerialPort_private::handshakeBoard(int timeouts)
+int OpenMVPluginSerialPort_private::waitMpyPrompt(int timeout_ms)
+{
+    if(m_port)
+    {
+        QByteArray response;
+        QByteArray targetResp(">>> ");
+        QByteArrayMatcher matcher(targetResp);
+
+        QElapsedTimer waitAckTimer;
+
+        waitAckTimer.start();
+
+        do
+        {
+            m_port->waitForReadyRead(1);
+            response.append(m_port->readAll());
+
+            int pos = 0;
+            while((pos = matcher.indexIn(response, pos)) != -1) {
+                return 0;
+            }
+        } while(!waitAckTimer.hasExpired(timeout_ms));
+
+        if(waitAckTimer.hasExpired(timeout_ms)) {
+            return -1;
+        }
+    }
+
+    return -2;
+}
+
+int OpenMVPluginSerialPort_private::handshakeBoard(int timeout_ms)
 {
     if(m_port)
     {
@@ -392,7 +421,7 @@ int OpenMVPluginSerialPort_private::handshakeBoard(int timeouts)
                 m_port->waitForReadyRead(1);
                 response.append(m_port->readAll());
 
-                if((response.size() < responseLen) && elaspedTimer2.hasExpired(150))
+                if((response.size() < responseLen) && elaspedTimer2.hasExpired(145))
                 {
                     QByteArray data;
                     serializeByte(data, __USBDBG_CMD);
@@ -419,22 +448,30 @@ int OpenMVPluginSerialPort_private::handshakeBoard(int timeouts)
 
             if(response.size() >= responseLen)
             {
-                int result = deserializeLong(response);
+                if(response.size() == responseLen)
+                {
+                    int result = deserializeLong(response);
 
-                if((uint32_t)result == 0xFFEEBBAA)
-                {
-                    return 0;
+                    if((uint32_t)result == 0xFFEEBBAA)
+                    {
+                        return 0;
+                    }
                 }
-                else
+                else if(response.size() > responseLen)
                 {
-                    response = response.mid(response.size());
-                    elaspedTimer.restart();
-                    elaspedTimer2.restart();
+                    if(response.endsWith("\xaa\xbb\xee\xff"))
+                    {
+                        return 0;
+                    }
                 }
+
+                response = response.mid(response.size());
+                elaspedTimer.restart();
+                elaspedTimer2.restart();
             }
-        } while(!waitAckTimer.hasExpired(timeouts));
+        } while(!waitAckTimer.hasExpired(timeout_ms));
 
-        if(waitAckTimer.hasExpired(timeouts)) {
+        if(waitAckTimer.hasExpired(timeout_ms)) {
             return -1;
         }
     }
@@ -579,8 +616,13 @@ void OpenMVPluginSerialPort_private::open(const QString &portName, int mode, int
     }
 
     {
-        // qDebug() << "reset board";
-        // if failed, reset the board
+        if(!m_port->setBaudRate(115200)) {
+            emit openResult(m_port->errorString());
+            delete m_port;
+            m_port = Q_NULLPTR;
+            return;
+        }
+
         if(0x00 != resetboard(mode)) {
             emit openResult(m_port->errorString());
             delete m_port;
@@ -588,32 +630,18 @@ void OpenMVPluginSerialPort_private::open(const QString &portName, int mode, int
             return;
         }
 
-        QThread::msleep(3000);
+        waitMpyPrompt(1000 * 10);
 
-        // chane baud to 115200
-        if(!m_port->setBaudRate(115200)) {
-            emit openResult(m_port->errorString());
-            delete m_port;
-            m_port = Q_NULLPTR;
-            return;
-        }
-        QThread::msleep(10);
-
-        // qDebug() << "change baud";
-        // send script to change uart baud
         changeBoardBaud(baud);
 
-        // change baud to 1500000
         if(!m_port->setBaudRate(baud)) {
             emit openResult(m_port->errorString());
             delete m_port;
             m_port = Q_NULLPTR;
             return;
         }
-        QThread::msleep(10); // sleep 200ms for change
+        QThread::msleep(30);
 
-        // qDebug() << "handshake";
-        // handshake
         if(0x00 == handshakeBoard(3000)) {
             emit openResult(QString());
             return;

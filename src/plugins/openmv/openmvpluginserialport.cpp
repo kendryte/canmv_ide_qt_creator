@@ -457,13 +457,13 @@ int OpenMVPluginSerialPort_private::handshakeBoard(int timeout_ms)
                         return 0;
                     }
                 }
-                else if(response.size() > responseLen)
-                {
-                    if(response.endsWith("\xaa\xbb\xee\xff"))
-                    {
-                        return 0;
-                    }
-                }
+                // else if(response.size() > responseLen)
+                // {
+                //     if(response.endsWith("\xaa\xbb\xee\xff"))
+                //     {
+                //         return 0;
+                //     }
+                // }
 
                 response = response.mid(response.size());
                 elaspedTimer.restart();

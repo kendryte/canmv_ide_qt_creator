@@ -55,7 +55,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>(C) ${IDE_COPYRIGHT_YEAR} ${IDE_AUTHOR}</string>
 	<key>CFBundleIconFile</key>
-	<string>openmv</string>
+	<string>canmv</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>

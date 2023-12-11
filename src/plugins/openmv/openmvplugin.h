@@ -77,10 +77,10 @@
 #include "tools/thresholdeditor.h"
 #include "tools/videotools.h"
 
-#define LIGHT_SPLASH_PATH ":/openmv/openmv-media/splash/openmv-splash/splash-small.png"
-#define LIGHT_SPLASH_HIDPI_PATH ":/openmv/openmv-media/splash/openmv-splash/splash-large.png"
-#define DARK_SPLASH_PATH ":/openmv/openmv-media/splash/openmv-splash-slate/splash-small.png"
-#define DARK_SPLASH_HIDPI_PATH ":/openmv/openmv-media/splash/openmv-splash-slate/splash-large.png"
+#define LIGHT_SPLASH_PATH ":/openmv/media/splash/splash/splash.png"
+#define LIGHT_SPLASH_HIDPI_PATH ":/openmv/media/splash/splash/splash.png"
+#define DARK_SPLASH_PATH ":/openmv/media/splash/splash/splash.png"
+#define DARK_SPLASH_HIDPI_PATH ":/openmv/media/splash/splash/splash.png"
 #define CONNECT_PATH ":/openmv/images/connect.png"
 #define CONNECT_USB_DARK_PATH ":/openmv/images/connect-usb-dark.png"
 #define CONNECT_WIFI_DARK_PATH ":/openmv/images/connect-wifi-dark.png"
@@ -483,6 +483,7 @@ private:
                                    QStringList &providerMethods, QMap<QString, QStringList> &providerMethodArgs);
     void parseImports(const QString &fileText, const QString &moduleFolder, const QStringList &builtInModules, importDataList_t &targetModules, QStringList &errorModules);
     bool importHelper(const QByteArray &text);
+    int updateExamplesFromUrl(QUrl url);
 };
 
 } // namespace Internal

@@ -1710,18 +1710,18 @@ void MainWindow::updateWindowIcon()
                 m_iconSmall = nullptr;
             }
 
-            // QIcon small(QStringLiteral(":/core/openmv-media/icons/openmv-icon/openmv16x16.png"));
+            // QIcon small(QStringLiteral(":/core/media/icons/logo-icon/16x16.png"));
             // QPixmap smallP = small.pixmap(QSize(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON)), ratio);
             // m_iconSmall = smallP.toImage().toHICON();
 
-            // QIcon big(QStringLiteral(":/core/openmv-media/icons/openmv-icon/openmv32x32.png"));
+            // QIcon big(QStringLiteral(":/core/media/icons/logo-icon/32x32.png"));
             // QPixmap bigP = big.pixmap(QSize(GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON)), ratio);
             // m_iconBig = bigP.toImage().toHICON();
 
             // It turns out that if you have a desktop with multiple screens with different dpi levels that it will look bad
             // to display anything but the highest dpi icon. So, just display the highest dpi instead of dynamically updating.
-            m_iconSmall = QPixmap(QStringLiteral(":/core/openmv-media/icons/openmv-icon/openmv16x16@2x.png")).toImage().toHICON();
-            m_iconBig = QPixmap(QStringLiteral(":/core/openmv-media/icons/openmv-icon/openmv32x32@2x.png")).toImage().toHICON();
+            m_iconSmall = QPixmap(QStringLiteral(":/core/media/icons/logo-icon/16x16@2x.png")).toImage().toHICON();
+            m_iconBig = QPixmap(QStringLiteral(":/core/media/icons/logo-icon/32x32@2x.png")).toImage().toHICON();
 
             SendMessage(hwnd, WM_SETICON, ICON_SMALL, LPARAM(m_iconSmall));
             SendMessage(hwnd, WM_SETICON, ICON_BIG, LPARAM(m_iconBig));

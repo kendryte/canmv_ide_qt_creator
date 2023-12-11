@@ -31,10 +31,10 @@
         <file>images/branch-closed-light_2x.png</file>
         <file>images/branch-open-light.png</file>
         <file>images/branch-open-light_2x.png</file>
-        <file>../../../../openmv-media/icons/openmv-icon/openmv16x16.png</file>
-        <file>../../../../openmv-media/icons/openmv-icon/openmv16x16@2x.png</file>
-        <file>../../../../openmv-media/icons/openmv-icon/openmv32x32.png</file>
-        <file>../../../../openmv-media/icons/openmv-icon/openmv32x32@2x.png</file>
+        <file>../../../../media/icons/logo-icon/16x16.png</file>
+        <file>../../../../media/icons/logo-icon/16x16@2x.png</file>
+        <file>../../../../media/icons/logo-icon/32x32.png</file>
+        <file>../../../../media/icons/logo-icon/32x32@2x.png</file>
         <!-- OPENMV-DIFF -->
     </qresource>
 </RCC>

@@ -2124,7 +2124,7 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
                     if(!m_portPath.isEmpty())
                     {
     #if defined(Q_OS_WIN)
-                        wchar_t driveLetter[m_portPath.size()];
+                        wchar_t* driveLetter = new wchar_t[m_portPath.size()];
                         m_portPath.toWCharArray(driveLetter);
 
                         if(!ejectVolume(driveLetter[0]))
@@ -2133,6 +2133,7 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
                                 Tr::tr("Disconnect"),
                                 Tr::tr("Failed to eject \"%L1\"!").arg(m_portPath));
                         }
+                        delete[] driveLetter;
     #elif defined(Q_OS_LINUX)
                         Utils::QtcProcess process;
                         process.setCommand(Utils::CommandLine(Utils::FilePath::fromString(QStringLiteral("umount")),
@@ -2313,7 +2314,7 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
                     if(!m_portPath.isEmpty())
                     {
 #if defined(Q_OS_WIN)
-                        wchar_t driveLetter[m_portPath.size()];
+                        wchar_t* driveLetter = new wchar_t[m_portPath.size()];
                         m_portPath.toWCharArray(driveLetter);
 
                         if(!ejectVolume(driveLetter[0]))
@@ -2322,6 +2323,7 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
                                 Tr::tr("Disconnect"),
                                 Tr::tr("Failed to eject \"%L1\"!").arg(m_portPath));
                         }
+                        delete[] driveLetter;
 #elif defined(Q_OS_LINUX)
                         Utils::QtcProcess process;
                         process.setCommand(Utils::CommandLine(Utils::FilePath::fromString(QStringLiteral("umount")),
@@ -3694,7 +3696,7 @@ void OpenMVPlugin::disconnectClicked(bool reset)
                     if(!m_portPath.isEmpty())
                     {
 #if defined(Q_OS_WIN)
-                        wchar_t driveLetter[m_portPath.size()];
+                        wchar_t* driveLetter = new wchar_t[m_portPath.size()];
                         m_portPath.toWCharArray(driveLetter);
 
                         if(!ejectVolume(driveLetter[0]))
@@ -3703,6 +3705,7 @@ void OpenMVPlugin::disconnectClicked(bool reset)
                                 Tr::tr("Disconnect"),
                                 Tr::tr("Failed to eject \"%L1\"!").arg(m_portPath));
                         }
+                        delete[] driveLetter;
 #elif defined(Q_OS_LINUX)
                         Utils::QtcProcess process;
                         process.setCommand(Utils::CommandLine(Utils::FilePath::fromString(QStringLiteral("umount")),

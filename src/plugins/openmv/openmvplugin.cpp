@@ -998,6 +998,56 @@ bool OpenMVPlugin::initialize(const QStringList &arguments, QString *errorMessag
     return true;
 }
 
+int OpenMVPlugin::updateExamplesFromUrl(QUrl url) {
+    QProgressDialog progress(Core::ICore::dialogParent());
+    progress.setLabelText(Tr::tr("Downloading..."));
+    progress.setCancelButtonText("Cancel");
+    progress.setRange(0, 100);
+    progress.setModal(true);
+    QNetworkAccessManager manager;
+    QNetworkRequest request(url);
+    auto reply = manager.get(request);
+    QEventLoop loop;
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    QObject::connect(reply, &QNetworkReply::downloadProgress, [&progress](qint64 bytesReceived, qint64 bytesTotal) {
+        if (bytesTotal > 0) {
+            int progressValue = static_cast<int>((bytesReceived * 100) / bytesTotal);
+            progress.setValue(progressValue);
+        }
+    });
+    progress.show();
+    loop.exec();
+    if (reply->error() != QNetworkReply::NoError) {
+        qDebug() << "Error: " << reply->errorString();
+        reply->deleteLater();
+        QMessageBox::critical(Core::ICore::dialogParent(), Tr::tr("Update examples"), Tr::tr("Failed to download examples."));
+        return -1;
+    }
+    qDebug() << "finished";
+    auto filepath = Core::ICore::userResourcePath(QStringLiteral("examples.zip")).toString();
+    qDebug() << filepath;
+    QFile file(filepath);
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(reply->readAll());
+        file.close();
+        QMessageBox::information(Core::ICore::dialogParent(), Tr::tr("Update examples"), Tr::tr("Update examples success."));
+    } else {
+        QMessageBox::critical(Core::ICore::dialogParent(), Tr::tr("Update examples"), Tr::tr("Failed to open examples file."));
+        reply->deleteLater();
+        return -1;
+    }
+    reply->deleteLater();
+
+    QZipReader zipReader(filepath);
+    if (zipReader.isReadable()) {
+        auto examplesDirPath = Core::ICore::userResourcePath(QStringLiteral("examples")).toString();
+        auto examplesDir = QDir(examplesDirPath);
+        examplesDir.removeRecursively();
+        zipReader.extractAll(examplesDirPath);
+    }
+    return 0;
+}
+
 void OpenMVPlugin::extensionsInitialized()
 {
     connect(Core::ActionManager::command(Core::Constants::NEW_FILE)->action(), &QAction::triggered, this, [this] {
@@ -1100,6 +1150,17 @@ void OpenMVPlugin::extensionsInitialized()
     connect(filesMenu->menu(), &QMenu::aboutToShow, this, [this, examplesMenu] {
         examplesMenu->menu()->clear();
         QMultiMap<QString, QAction *> actions = aboutToShowExamplesRecursive(Core::ICore::userResourcePath(QStringLiteral("examples")).toString(), examplesMenu->menu());
+        auto updateFromGithub = new QAction("Update from GitHub", examplesMenu->menu());
+        connect(updateFromGithub, &QAction::triggered, this, [this] {
+            qDebug() << "Update from GitHub";
+            updateExamplesFromUrl(QUrl("https://github.com/kendryte/canmv_examples/archive/refs/heads/main.zip"));
+        });
+        // examplesMenu->menu()->addAction(updateFromGithub);
+        auto updateFromGitee = new QAction("Update from Gitee", examplesMenu->menu());
+        connect(updateFromGitee, &QAction::triggered, this, [] {
+            qDebug() << "Update from Gitee";
+        });
+        // examplesMenu->menu()->addAction(updateFromGitee);
         examplesMenu->menu()->addActions(actions.values());
         examplesMenu->menu()->setDisabled(actions.values().isEmpty());
     });
@@ -1672,11 +1733,11 @@ void OpenMVPlugin::extensionsInitialized()
     Core::Command *closeDatasetCommand = Core::ActionManager::registerAction(closeDatasetAction, Utils::Id("OpenMV.CloseDataset"));
     datasetEditorMenu->addAction(closeDatasetCommand);
 
-    QAction *docsAction = new QAction(Tr::tr("OpenMV Docs"), this);
+    QAction *docsAction = new QAction(Tr::tr("K230 CanMV Docs"), this);
     Core::Command *docsCommand = Core::ActionManager::registerAction(docsAction, Utils::Id("OpenMV.Docs"));
     helpMenu->addAction(docsCommand, Core::Constants::G_HELP_SUPPORT);
     connect(docsAction, &QAction::triggered, this, [] {
-        QUrl url = QUrl::fromLocalFile(Core::ICore::userResourcePath(QStringLiteral("html/index.html")).toString());
+        QUrl url = QUrl(QStringLiteral("https://developer.canaan-creative.com/k230_canmv/dev/index.html"));
 
         if(!QDesktopServices::openUrl(url))
         {
@@ -1686,11 +1747,11 @@ void OpenMVPlugin::extensionsInitialized()
         }
     });
 
-    QAction *forumsAction = new QAction(Tr::tr("OpenMV Forums"), this);
+    QAction *forumsAction = new QAction(Tr::tr("Canaan Forums"), this);
     Core::Command *forumsCommand = Core::ActionManager::registerAction(forumsAction, Utils::Id("OpenMV.Forums"));
     helpMenu->addAction(forumsCommand, Core::Constants::G_HELP_SUPPORT);
     connect(forumsAction, &QAction::triggered, this, [] {
-        QUrl url = QUrl(QStringLiteral("https://forums.openmv.io/"));
+        QUrl url = QUrl(QStringLiteral("https://developer.canaan-creative.com/home/0"));
 
         if(!QDesktopServices::openUrl(url))
         {
@@ -1700,60 +1761,22 @@ void OpenMVPlugin::extensionsInitialized()
         }
     });
 
-    Core::ActionContainer *pinoutMenu = Core::ActionManager::createMenu(Utils::Id("OpenMV.PinoutMenu"));
-    pinoutMenu->menu()->setTitle(Utils::HostOsInfo::isMacHost() ? Tr::tr("About OpenMV Cam") : Tr::tr("About OpenMV Cam..."));
-    pinoutMenu->setOnAllDisabledBehavior(Core::ActionContainer::Show);
-    helpMenu->addMenu(pinoutMenu);
-
-    typedef QPair<QString, QString> QStringPair;
-    QList<QStringPair> cameras;
-
-    cameras.append(QStringPair(QStringLiteral("H7 Plus"), QStringLiteral("cam-h7-plus-ov5640")));
-    cameras.append(QStringPair(QStringLiteral("H7"), QStringLiteral("cam-h7-ov7725")));
-    cameras.append(QStringPair(QStringLiteral("M7"), QStringLiteral("cam-m7-ov7725")));
-    cameras.append(QStringPair(QStringLiteral("M4"), QStringLiteral("cam-m4-ov7725")));
-    cameras.append(QStringPair(QStringLiteral("M4 Original"), QStringLiteral("cam-m4-ov2640")));
-
-    foreach(const QStringPair &cam, cameras)
-    {
-        QAction *pinout = new QAction(
-             Utils::HostOsInfo::isMacHost() ? Tr::tr("About OpenMV Cam %1").arg(cam.first) : Tr::tr("About OpenMV Cam %1...").arg(cam.first), this);
-        Core::Command *pinoutCommand = Core::ActionManager::registerAction(pinout, Utils::Id(QString(QStringLiteral("OpenMV.Pinout.%1")).arg(cam.second).toUtf8().constData()));
-        pinoutMenu->addAction(pinoutCommand);
-        connect(pinout, &QAction::triggered, this, [cam] {
-            QUrl url = QUrl::fromLocalFile(Core::ICore::userResourcePath(QString(QStringLiteral("/html/_images/pinout-openmv-%1.png")).arg(cam.second)).toString());
-
-            if(!QDesktopServices::openUrl(url))
-            {
-                QMessageBox::critical(Core::ICore::dialogParent(),
-                                      QString(),
-                                      Tr::tr("Failed to open: \"%L1\"").arg(url.toString()));
-            }
-        });
-    }
-
     QAction *aboutAction = new QAction(QIcon::fromTheme(QStringLiteral("help-about")),
-        Utils::HostOsInfo::isMacHost() ? Tr::tr("About OpenMV IDE") : Tr::tr("About OpenMV IDE..."), this);
+        Utils::HostOsInfo::isMacHost() ? Tr::tr("About CanMV IDE") : Tr::tr("About CanMV IDE..."), this);
     aboutAction->setMenuRole(QAction::AboutRole);
      Core::Command *aboutCommand = Core::ActionManager::registerAction(aboutAction, Utils::Id("OpenMV.About"));
     helpMenu->addAction(aboutCommand, Core::Constants::G_HELP_ABOUT);
     connect(aboutAction, &QAction::triggered, this, [] {
-        QMessageBox::about(Core::ICore::dialogParent(), Tr::tr("About OpenMV IDE"), Tr::tr(
-        "<p><b>About OpenMV IDE %L1</b></p>"
-        "<p>By: Ibrahim Abdelkader & Kwabena W. Agyeman</p>"
+        QMessageBox::about(Core::ICore::dialogParent(), Tr::tr("About CanMV IDE"), Tr::tr(
+        "<p><b>About CanMV IDE %L1</b></p>"
+        "<p>By: Canaan Inc.</p>"
+        "<p>Based on OpenMV IDE By Ibrahim Abdelkader & Kwabena W. Agyeman</p>"
         "<p><b>GNU GENERAL PUBLIC LICENSE</b></p>"
         "<p>Copyright (C) %L2 %L3</p>"
         "<p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the <a href=\"https://github.com/openmv/qt-creator/raw/master/LICENSE.GPL3-EXCEPT\">GNU General Public License</a> for more details.</p>"
-        "<p><b>Questions or Comments?</b></p>"
-        "<p>Contact us at <a href=\"mailto:openmv@openmv.io\">openmv@openmv.io</a>.</p>"
         ).arg(QLatin1String(Core::Constants::IDE_VERSION_LONG)).arg(QLatin1String(Core::Constants::IDE_YEAR)).arg(QLatin1String(Core::Constants::IDE_AUTHOR)) + Tr::tr(
         "<p><b>Credits</b></p>") + Tr::tr(
-        "<p>OpenMV IDE English translation by Kwabena W. Agyeman.</p>") + Tr::tr(
-        "<p><b>Partners</b></p>") +
-        QStringLiteral("<p><a href=\"https://www.arduino.cc/\"><img source=\":/openmv/images/arduino-partnership.png\"></a></p>") +
-        QString(QStringLiteral("<p><a href=\"https://edgeimpulse.com/\"><img source=\":/openmv/images/edge-impulse-partnership-%1.png\"></a></p>")).arg(Utils::creatorTheme()->flag(Utils::Theme::DarkUserInterface) ? QStringLiteral("dark") : QStringLiteral("light")) +
-        QString(QStringLiteral("<p><a href=\"https://www.nxp.com/\"><img source=\":/openmv/images/nxp-logo-%1.png\"></a></p>")).arg(Utils::creatorTheme()->flag(Utils::Theme::DarkUserInterface) ? QStringLiteral("dark") : QStringLiteral("light")) +
-        QString(QStringLiteral("<p><a href=\"https://www.st.com/\"><img source=\":/openmv/images/st-logo-%1.png\"></a></p>")).arg(Utils::creatorTheme()->flag(Utils::Theme::DarkUserInterface) ? QStringLiteral("dark") : QStringLiteral("light"))
+        "<p>OpenMV IDE English translation by Kwabena W. Agyeman.</p>")
         );
     });
 
@@ -2489,7 +2512,8 @@ void OpenMVPlugin::extensionsInitialized()
     ///////////////////////////////////////////////////////////////////////////
 
     QLoggingCategory::setFilterRules(QStringLiteral("qt.network.ssl.warning=false")); // https://stackoverflow.com/questions/26361145/qsslsocket-error-when-ssl-is-not-used
-
+#define ENABLE_AUTO_UPDATE 0
+#if ENABLE_AUTO_UPDATE
     if(!isNoShow()) connect(Core::ICore::instance(), &Core::ICore::coreOpened, this, [this] {
 
         QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -2559,6 +2583,9 @@ void OpenMVPlugin::extensionsInitialized()
             QTimer::singleShot(0, this, &OpenMVPlugin::packageUpdate);
         }
     });
+#else
+    QTimer::singleShot(0, this, &OpenMVPlugin::packageUpdate);
+#endif
 }
 
 bool OpenMVPlugin::delayedInitialize()

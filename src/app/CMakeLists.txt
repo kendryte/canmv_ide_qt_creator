@@ -105,7 +105,7 @@ if (APPLE)
       # OPENMV-DIFF #
       # MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/app-Info.plist"
       # OPENMV-DIFF #
-      MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/openmvide-Info.plist"
+      MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
       # OPENMV-DIFF #
   )
   # icon
@@ -141,11 +141,11 @@ if (APPLE)
   qtc_copy_to_builddir(copy_icns
     DESTINATION ${IDE_DATA_PATH}
     FILES
-      ${CMAKE_BINARY_DIR}/../openmv-media/icons/openmv-icon/openmv.icns
+      ${CMAKE_BINARY_DIR}/../media/icons/logo-icon/logo.icns
   )
   install(
     FILES
-      ${CMAKE_BINARY_DIR}/../openmv-media/icons/openmv-icon/openmv.icns
+      ${CMAKE_BINARY_DIR}/../media/icons/logo-icon/logo.icns
     DESTINATION ${IDE_DATA_PATH}
   )
   # OPENMV-DIFF #

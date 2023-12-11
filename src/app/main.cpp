@@ -799,7 +799,7 @@ int main(int argc, char **argv)
     }
     if (!openmvplugin) {
         QString nativePaths = QDir::toNativeSeparators(pluginPaths.join(QLatin1Char(',')));
-        const QString reason = QCoreApplication::translate("Application", "Could not find OpenMV plugin in %1").arg(nativePaths);
+        const QString reason = QCoreApplication::translate("Application", "Could not find CanMV plugin in %1").arg(nativePaths);
         displayError(msgCoreLoadFailure(reason));
         return 1;
     }
@@ -822,7 +822,7 @@ int main(int argc, char **argv)
         return 1;
     }
     if (!openmvplugin->isEffectivelyEnabled()) {
-        const QString reason = QCoreApplication::translate("Application", "OpenMV plugin is disabled.");
+        const QString reason = QCoreApplication::translate("Application", "CanMV plugin is disabled.");
         displayError(msgCoreLoadFailure(reason));
         return 1;
     }

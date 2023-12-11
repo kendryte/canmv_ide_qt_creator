@@ -16,12 +16,16 @@
 #define YUV_COLOR_SPACE_U 8
 #define YUV_COLOR_SPACE_V 9
 
-extern const uint8_t rb528_table[32];
-extern const uint8_t g628_table[64];
-extern const uint8_t rb825_table[256];
-extern const uint8_t g826_table[256];
-extern const int8_t lab_table[196608];
-extern const int8_t yuv_table[196608];
+#include "lab_tab.c"
+#include "yuv_tab.c"
+#include "rgb2rgb_tab.c"
+
+extern const uint8_t rb528_table[];
+extern const uint8_t g628_table[];
+extern const uint8_t rb825_table[];
+extern const uint8_t g826_table[];
+extern const int8_t lab_table[];
+extern const int8_t yuv_table[];
 
 namespace OpenMV {
 namespace Internal {

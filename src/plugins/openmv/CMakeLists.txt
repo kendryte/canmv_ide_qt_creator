@@ -13,9 +13,9 @@ add_qtc_plugin(OpenMV
     openmvcamerasettings.cpp openmvcamerasettings.h
     openmvdataseteditor.cpp openmvdataseteditor.h
     histogram/openmvpluginhistogram.cpp histogram/openmvpluginhistogram.h
-    histogram/rgb2rgb_tab.c
-    histogram/lab_tab.c
-    histogram/yuv_tab.c
+    #histogram/rgb2rgb_tab.c
+    #histogram/lab_tab.c
+    #histogram/yuv_tab.c
     tools/myqserialportinfo.cpp tools/myqserialportinfo.h
     tools/loaderdialog.cpp tools/loaderdialog.h
     tools/bossac.cpp tools/bossac.h

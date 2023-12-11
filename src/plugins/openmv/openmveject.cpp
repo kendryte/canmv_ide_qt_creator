@@ -20,9 +20,9 @@ BOOL PreventRemovalOfVolume(HANDLE hVolume, BOOL fPrevent);
 BOOL AutoEjectVolume(HANDLE hVolume);
 BOOL CloseVolume(HANDLE hVolume);
 
-LPTSTR szVolumeFormat = TEXT("\\\\.\\%c:");
-LPTSTR szRootFormat = TEXT("%c:\\");
-LPTSTR szErrorFormat = TEXT("Error %d: %s\n");
+LPCTSTR szVolumeFormat = TEXT("\\\\.\\%c:");
+LPCTSTR szRootFormat = TEXT("%c:\\");
+LPCTSTR szErrorFormat = TEXT("Error %d: %s\n");
 
 HANDLE OpenVolume(TCHAR cDriveLetter)
 {
@@ -118,7 +118,7 @@ BOOL PreventRemovalOfVolume(HANDLE hVolume, BOOL fPreventRemoval)
                             NULL);
 }
 
-AutoEjectVolume(HANDLE hVolume)
+BOOL AutoEjectVolume(HANDLE hVolume)
 {
     DWORD dwBytesReturned;
 

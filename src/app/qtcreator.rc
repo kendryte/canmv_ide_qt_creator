@@ -15,7 +15,7 @@
 // IDI_ICON7               ICON    DISCARDABLE     "winicons/pri.ico"
 // IDI_ICON8               ICON    DISCARDABLE     "winicons/qml.ico"
 // OPENMV-DIFF //
-IDI_ICON1               ICON    DISCARDABLE     "../../../openmv-media/icons/openmv-icon/openmv.ico"
+IDI_ICON1               ICON    DISCARDABLE     "../../../media/icons/logo-icon/logo.ico"
 // OPENMV-DIFF //
 
 VS_VERSION_INFO VERSIONINFO

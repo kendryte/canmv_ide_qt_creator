@@ -4,10 +4,9 @@
 
 #include <utils/theme/theme.h>
 
-extern const uint8_t rb825_table[256];
-extern const uint8_t g826_table[256];
-extern const int8_t lab_table[196608];
-extern const int8_t yuv_table[196608];
+#include "../histogram/rgb2rgb_tab.c"
+#include "../histogram/lab_tab.c"
+#include "../histogram/yuv_tab.c"
 
 namespace OpenMV {
 namespace Internal {

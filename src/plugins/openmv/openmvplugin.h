@@ -203,6 +203,8 @@
 #define FLASH_SECTOR_ERASE 4096 // Flash sector size in bytes.
 #define FOLDER_SCAN_TIME 10000 // in ms
 
+#define USBDBG_SVFILE_ERR_NONE      (1024 + 0)
+
 namespace OpenMV {
 namespace Internal {
 
@@ -393,11 +395,8 @@ private:
     QAction *m_autoReconnectAction;
     QAction *m_stopOnConnectDiconnectionAction;
 
-    Core::Command *m_openDriveFolderCommand; QAction *m_openDriveFolderAction;
-    Core::Command *m_configureSettingsCommand; QAction *m_configureSettingsAction;
     Core::Command *m_saveCommand; QAction *m_saveAction;
-    Core::Command *m_resetCommand; QAction *m_resetAction;
-    Core::Command *m_developmentReleaseCommand; QAction *m_developmentReleaseAction;
+    Core::Command *m_saveFileCommand; QAction *m_saveFileAction;
     Core::ActionContainer *m_openTerminalMenu;
     Core::Command *m_connectCommand; QAction *m_connectAction;
     Core::Command *m_disconnectCommand; QAction *m_disconnectAction;
@@ -484,6 +483,7 @@ private:
     void parseImports(const QString &fileText, const QString &moduleFolder, const QStringList &builtInModules, importDataList_t &targetModules, QStringList &errorModules);
     bool importHelper(const QByteArray &text);
     int updateExamplesFromUrl(QUrl url);
+    void saveFileOverSerial(const QString &fileName, const QByteArray &fileData);
 };
 
 } // namespace Internal

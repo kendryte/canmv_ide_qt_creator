@@ -70,7 +70,7 @@ void OpenMVPlugin::packageUpdate()
                 || ((old_major == new_major) && (old_minor < new_minor))
                 || ((old_major == new_major) && (old_minor == new_minor) && (old_patch < new_patch)))
                 {
-                    QMessageBox box(QMessageBox::Information, Tr::tr("Update Available"), Tr::tr("New OpenMV IDE resources are available (e.g. examples, firmware, documentation, etc.)."), QMessageBox::Cancel, Core::ICore::dialogParent(),
+                    QMessageBox box(QMessageBox::Information, Tr::tr("Update Available"), Tr::tr("New CanMV IDE resources are available (e.g. examples, firmware, documentation, etc.)."), QMessageBox::Cancel, Core::ICore::dialogParent(),
                         Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
                         (Utils::HostOsInfo::isMacHost() ? Qt::WindowType(0) : Qt::WindowCloseButtonHint));
                     QPushButton *button = box.addButton(Tr::tr("Install"), QMessageBox::AcceptRole);
@@ -114,7 +114,7 @@ void OpenMVPlugin::packageUpdate()
                                 {
                                     QMessageBox::critical(Core::ICore::dialogParent(),
                                         QString(),
-                                        error + Tr::tr("\n\nPlease close any programs that are viewing/editing OpenMV IDE's application data and then restart OpenMV IDE!"));
+                                        error + Tr::tr("\n\nPlease close any programs that are viewing/editing OpenMV IDE's application data and then restart CanMV IDE!"));
 
                                     QApplication::quit();
                                     ok = false;
@@ -125,7 +125,7 @@ void OpenMVPlugin::packageUpdate()
                                     {
                                         QMessageBox::critical(Core::ICore::dialogParent(),
                                             QString(),
-                                            Tr::tr("Please close any programs that are viewing/editing OpenMV IDE's application data and then restart OpenMV IDE!"));
+                                            Tr::tr("Please close any programs that are viewing/editing OpenMV IDE's application data and then restart CanMV IDE!"));
 
                                         QApplication::quit();
                                         ok = false;
@@ -166,7 +166,7 @@ void OpenMVPlugin::packageUpdate()
                             delete dialog;
                         });
 
-                        QNetworkRequest request2 = QNetworkRequest(QUrl(QStringLiteral("https://github.com/openmv/openmv-ide/releases/download/v%1.%2.%3/openmv-ide-resources-%1.%2.%3.zip").arg(new_major).arg(new_minor).arg(new_patch)));
+                        QNetworkRequest request2 = QNetworkRequest(QUrl(QStringLiteral("https://kendryte-download.canaan-creative.com/developer/k230/canmv-ide-resources/canmv-ide-resources-%1.%2.%3.zip").arg(new_major).arg(new_minor).arg(new_patch)));
                         QNetworkReply *reply2 = manager2->get(request2);
 
                         if(reply2)
@@ -194,7 +194,7 @@ void OpenMVPlugin::packageUpdate()
         connect(reply, &QNetworkReply::destroyed, manager, &QNetworkAccessManager::deleteLater); reply->deleteLater();
     });
 
-    QNetworkRequest request = QNetworkRequest(QUrl(QStringLiteral("https://raw.githubusercontent.com/openmv/openmv-ide-version/main/openmv-ide-resources-version.txt")));
+    QNetworkRequest request = QNetworkRequest(QUrl(QStringLiteral("https://kendryte-download.canaan-creative.com/developer/k230/canmv-ide-resources/version.txt")));
     QNetworkReply *reply = manager->get(request);
 
     if(reply)
@@ -3548,11 +3548,9 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
         m_patch = patch2;
         m_errorFilterString = QString();
 
-        m_openDriveFolderAction->setEnabled(false);
-        m_configureSettingsAction->setEnabled(false);
+
         m_saveAction->setEnabled(false);
-        m_resetAction->setEnabled(true);
-        m_developmentReleaseAction->setEnabled(true);
+        m_saveFileAction->setEnabled(false);
         if(!m_autoReconnectAction->isChecked()) m_connectAction->setEnabled(false);
         m_connectAction->setVisible(false);
         if(!m_autoReconnectAction->isChecked()) m_disconnectAction->setEnabled(true);
@@ -3622,7 +3620,7 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
             if((file.error() == QFile::NoError) && (!data.isEmpty()))
             {
                 file.close();
-
+#if 0
                 QRegularExpressionMatch match = QRegularExpression(QStringLiteral("(\\d+)\\.(\\d+)\\.(\\d+)")).match(QString::fromUtf8(data));
 
                 if((major2 < match.captured(1).toInt())
@@ -3648,6 +3646,7 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
                 {
                     m_versionButton->setText(m_versionButton->text().append(Tr::tr(" - [ latest ]")));
                 }
+#endif
             }
         }
 
@@ -3812,11 +3811,8 @@ void OpenMVPlugin::disconnectClicked(bool reset)
             m_portPath = QString();
             m_errorFilterString = QString();
 
-            m_openDriveFolderAction->setEnabled(false);
-            m_configureSettingsAction->setEnabled(false);
             m_saveAction->setEnabled(false);
-            m_resetAction->setEnabled(false);
-            m_developmentReleaseAction->setEnabled(false);
+            m_saveFileAction->setEnabled(false);
             m_connectAction->setVisible(true);
             if(!m_autoReconnectAction->isChecked()) m_connectAction->setEnabled(true);
             m_disconnectAction->setVisible(false);

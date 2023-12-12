@@ -1167,7 +1167,7 @@ void OpenMVPlugin::extensionsInitialized()
 
     Core::ActionContainer *toolsMenu = Core::ActionManager::actionContainer(Core::Constants::M_TOOLS);
     Core::ActionContainer *helpMenu = Core::ActionManager::actionContainer(Core::Constants::M_HELP);
-
+#if 0
     m_bootloaderAction = new QAction(Tr::tr("Run Bootloader (Load Firmware)"), this);
     Core::Command *bootloaderCommand = Core::ActionManager::registerAction(m_bootloaderAction, Utils::Id("OpenMV.Bootloader"));
     bootloaderCommand->setDefaultKeySequence(QKeySequence(Tr::tr("Ctrl+Shift+L")));
@@ -1186,8 +1186,8 @@ void OpenMVPlugin::extensionsInitialized()
         == QMessageBox::Yes) connectClicked(true, QString(), true, true);
     });
     toolsMenu->addSeparator();
-
-    m_autoReconnectAction = new QAction(Tr::tr("Auto Reconnect to OpenMV Cam"), this);
+#endif
+    m_autoReconnectAction = new QAction(Tr::tr("Auto Reconnect to CanMV"), this);
     m_autoReconnectAction->setToolTip(Tr::tr("When Auto Reconnect is enabled OpenMV IDE will automatically reconnect to your OpenMV if detected."));
     Core::Command *autoReconnectCommand = Core::ActionManager::registerAction(m_autoReconnectAction, Utils::Id("OpenMV.AutoReconnect"));
     toolsMenu->addAction(autoReconnectCommand);
@@ -1204,36 +1204,132 @@ void OpenMVPlugin::extensionsInitialized()
     m_stopOnConnectDiconnectionAction->setDisabled(m_disableStop);
 
     toolsMenu->addSeparator();
-
-    m_openDriveFolderAction = new QAction(Tr::tr("Open OpenMV Cam Drive folder"), this);
-    m_openDriveFolderCommand = Core::ActionManager::registerAction(m_openDriveFolderAction, Utils::Id("OpenMV.OpenDriveFolder"));
-    toolsMenu->addAction(m_openDriveFolderCommand);
-    m_openDriveFolderAction->setEnabled(false);
-    connect(m_openDriveFolderAction, &QAction::triggered, this, [this] {Core::FileUtils::showInGraphicalShell(Core::ICore::mainWindow(), Utils::FilePath::fromString(m_portPath).pathAppended(Utils::HostOsInfo::isWindowsHost() ? QStringLiteral("") : QStringLiteral(".openmv_disk"))); });
-
-    m_configureSettingsAction = new QAction(Tr::tr("Configure OpenMV Cam settings file"), this);
-    m_configureSettingsCommand = Core::ActionManager::registerAction(m_configureSettingsAction, Utils::Id("OpenMV.Settings"));
-    toolsMenu->addAction(m_configureSettingsCommand);
-    m_configureSettingsAction->setEnabled(false);
-    connect(m_configureSettingsAction, &QAction::triggered, this, &OpenMVPlugin::configureSettings);
-
-    m_saveAction = new QAction(Tr::tr("Save open script to OpenMV Cam (as main.py)"), this);
+    m_saveAction = new QAction(Tr::tr("Save open script to CanMV board (as main.py)"), this);
     m_saveCommand = Core::ActionManager::registerAction(m_saveAction, Utils::Id("OpenMV.Save"));
     toolsMenu->addAction(m_saveCommand);
     m_saveAction->setEnabled(false);
     connect(m_saveAction, &QAction::triggered, this, &OpenMVPlugin::saveScript);
 
-    m_resetAction = new QAction(Tr::tr("Reset OpenMV Cam"), this);
-    m_resetCommand = Core::ActionManager::registerAction(m_resetAction, Utils::Id("OpenMV.Reset"));
-    toolsMenu->addAction(m_resetCommand);
-    m_resetAction->setEnabled(false);
-    connect(m_resetAction, &QAction::triggered, this, [this] {disconnectClicked(true);});
+    m_saveFileAction = new QAction(Tr::tr("Save file to CanMV board"), this);
+    m_saveFileCommand = Core::ActionManager::registerAction(m_saveFileAction, Utils::Id("OpenMV.SaveFile"));
+    toolsMenu->addAction(m_saveFileCommand);
+    m_saveFileAction->setEnabled(false);
+    connect(m_saveFileAction, &QAction::triggered, this, [this](){
+        qDebug() << "Save file";
+        QDialog *dialog = new QDialog(Core::ICore::dialogParent(),
+                                      Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
+                                          (Utils::HostOsInfo::isMacHost() ? Qt::WindowType(0) : Qt::WindowCloseButtonHint));
+        dialog->setWindowTitle(tr("Save file to CanMV Cam"));
 
-    m_developmentReleaseAction = new QAction(Tr::tr("Install the Latest Development Release"), this);
-    m_developmentReleaseCommand = Core::ActionManager::registerAction(m_developmentReleaseAction, Utils::Id("OpenMV.InstallTheLatestDevelopmentRelease"));
-    toolsMenu->addAction(m_developmentReleaseCommand);
-    m_developmentReleaseAction->setEnabled(false);
-    connect(m_developmentReleaseAction, &QAction::triggered, this, &OpenMVPlugin::installTheLatestDevelopmentRelease);
+        QVBoxLayout *v_layout = new QVBoxLayout(dialog);
+
+        QLabel *label = new QLabel(tr("Select a file save to spec path"));
+        v_layout->addWidget(label);
+
+        QLineEdit *filePathEdit = new QLineEdit(tr("filename.ext or /pathto/filename.ext"));
+        v_layout->addWidget(filePathEdit);
+
+        QWidget *widget = new QWidget();
+        QHBoxLayout *h_layout = new QHBoxLayout(widget);
+
+        QLineEdit *fileNameEdit = new QLineEdit(tr("Please select a file"));
+        fileNameEdit->setReadOnly(true);
+        h_layout->addWidget(fileNameEdit);
+
+        QPushButton *openFileBtn = new QPushButton(tr("Open"), widget);
+        h_layout->addWidget(openFileBtn);
+
+        connect(openFileBtn, &QPushButton::clicked, this, [this, fileNameEdit] {
+            QSettings *settings = ExtensionSystem::PluginManager::settings();
+            settings->beginGroup(QStringLiteral(SETTINGS_GROUP));
+
+            QString fileName = QFileDialog::getOpenFileName(Core::ICore::dialogParent(),
+                                                            QObject::tr("Select file send to CanMV board"),
+                                                            settings->value(QStringLiteral("LastOpenFileToSave"), QDir::homePath()).toString(),
+                                                            QObject::tr("All Files (*.*)"));
+
+            if(!fileName.isEmpty())
+            {
+                fileNameEdit->setText(fileName);
+
+                QFileInfo fi(fileName);
+
+                settings->setValue(QStringLiteral("LastOpenFileToSave"), fi.path());
+            }
+            settings->endGroup();
+        });
+
+        v_layout->addWidget(widget);
+
+        QDialogButtonBox *box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        v_layout->addWidget(box);
+
+        QPushButton *okBtn = box->button(QDialogButtonBox::Ok);
+        okBtn->setAutoDefault(false);
+        okBtn->setDefault(false);
+
+        QPushButton *cancelBtn = box->button(QDialogButtonBox::Cancel);
+        cancelBtn->setAutoDefault(true);
+        cancelBtn->setDefault(true);
+
+        connect(box, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
+        connect(box, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
+
+        if(dialog->exec() == QDialog::Accepted)
+        {
+            QString fileName = fileNameEdit->text();
+            QString targetPath = filePathEdit->text();
+
+            QFileInfo filInfo(fileName);
+            QString newFileName = filInfo.fileName();
+
+            if(targetPath.contains(QStringLiteral(" ")))
+            {
+                // QMessageBox::critical(Core::ICore::dialogParent(),
+                //     tr("Save file to CanMV Cam"),
+                //     tr("Path %L1 invaild.").arg(targetPath));
+                // return;
+                targetPath = newFileName;
+            }
+
+            qDebug() << fileName << targetPath;
+
+            QFile file(fileName);
+
+            if(file.open(QIODevice::ReadOnly))
+            {
+                QByteArray data = file.readAll();
+
+                if((file.error() == QFile::NoError) && (!data.isEmpty()))
+                {
+                    file.close();
+
+                    // check user spec the path is vaild.
+                    if(targetPath.size() > 63) {
+                        QMessageBox::critical(Core::ICore::dialogParent(),
+                                              tr("Save file to CanMV Cam"),
+                                              tr("%L1 is too long.").arg(fileName));
+                    }
+                    else
+                    {
+                        saveFileOverSerial(targetPath, data);
+                    }
+                }
+                else
+                {
+                    QMessageBox::critical(Core::ICore::dialogParent(),
+                                          tr("Save file to CanMV Cam"),
+                                          tr("Read %L1 failed.").arg(fileName));
+                }
+            }
+            else
+            {
+                QMessageBox::critical(Core::ICore::dialogParent(),
+                                      tr("Save file to CanMV Cam"),
+                                      tr("Open %L1 failed.").arg(fileName));
+            }
+        }
+    });
 
     toolsMenu->addSeparator();
     m_openTerminalMenu = Core::ActionManager::createMenu(Utils::Id("OpenMV.OpenTermnial"));
@@ -1336,7 +1432,7 @@ void OpenMVPlugin::extensionsInitialized()
 
     machineVisionToolsMenu->addSeparator();
 
-    QAction *networkLibraryAction = new QAction(Tr::tr("CNN Network Library"), this);
+    QAction *networkLibraryAction = new QAction(Tr::tr("kmodel Library"), this);
     Core::Command *networkLibraryCommand = Core::ActionManager::registerAction(networkLibraryAction, Utils::Id("OpenMV.NetworkLibrary"));
     machineVisionToolsMenu->addAction(networkLibraryCommand);
     connect(networkLibraryAction, &QAction::triggered, this, [this] {
@@ -1344,9 +1440,9 @@ void OpenMVPlugin::extensionsInitialized()
         settings->beginGroup(QStringLiteral(SETTINGS_GROUP));
 
         QString src =
-            QFileDialog::getOpenFileName(Core::ICore::dialogParent(), Tr::tr("Network to copy to OpenMV Cam"),
+            QFileDialog::getOpenFileName(Core::ICore::dialogParent(), Tr::tr("Network to copy to CanMV Cam"),
                 Core::ICore::userResourcePath(QStringLiteral("models")).toString(),
-                Tr::tr("TensorFlow Model (*.tflite);;Neural Network Model (*.network);;Label Files (*.txt);;All Files (*.*)"));
+                Tr::tr("Neural Network Model (*.kmodel);;Label Files (*.txt);;All Files (*.*)"));
 
         if(!src.isEmpty())
         {
@@ -1355,11 +1451,11 @@ void OpenMVPlugin::extensionsInitialized()
             forever
             {
                 dst =
-                QFileDialog::getSaveFileName(Core::ICore::dialogParent(), Tr::tr("Where to save the network on the OpenMV Cam"),
+                QFileDialog::getSaveFileName(Core::ICore::dialogParent(), Tr::tr("Where to save the network on the CanMV board"),
                     m_portPath.isEmpty()
                     ? Utils::FilePath::fromVariant(settings->value(QStringLiteral(LAST_MODEL_NO_CAM_PATH), QDir::homePath())).pathAppended(QFileInfo(src).fileName()).toString()
                     : Utils::FilePath::fromVariant(settings->value(QStringLiteral(LAST_MODEL_WITH_CAM_PATH), m_portPath)).pathAppended(QFileInfo(src).fileName()).toString(),
-                    Tr::tr("TensorFlow Model (*.tflite);;Neural Network Model (*.network);;Label Files (*.txt);;All Files (*.*)"));
+                    Tr::tr("Neural Network Model (*.kmodel);;Label Files (*.txt);;All Files (*.*)"));
 
                 if((!dst.isEmpty()) && QFileInfo(dst).completeSuffix().isEmpty())
                 {
@@ -1826,9 +1922,8 @@ void OpenMVPlugin::extensionsInitialized()
 
         if(m_connected)
         {
-            m_openDriveFolderAction->setEnabled(!m_portPath.isEmpty());
-            m_configureSettingsAction->setEnabled(!m_portPath.isEmpty());
             m_saveAction->setEnabled((!m_portPath.isEmpty()) && (editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false));
+            m_saveFileAction->setEnabled(true);
             m_startAction->setEnabled((!m_running) && (editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false));
             m_startAction->setVisible(!m_running);
             m_stopAction->setEnabled(m_running);
@@ -1848,9 +1943,8 @@ void OpenMVPlugin::extensionsInitialized()
         if(m_connected)
         {
             Core::IEditor *editor = Core::EditorManager::currentEditor();
-            m_openDriveFolderAction->setEnabled(!m_portPath.isEmpty());
-            m_configureSettingsAction->setEnabled(!m_portPath.isEmpty());
             m_saveAction->setEnabled((!m_portPath.isEmpty()) && (editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false));
+            m_saveFileAction->setEnabled(true);
             m_startAction->setEnabled((!running) && (editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false));
             m_startAction->setVisible(!running);
             m_stopAction->setEnabled(running);
@@ -3300,6 +3394,7 @@ QObject *OpenMVPlugin::remoteCommand(const QStringList &options, const QString &
 
 void OpenMVPlugin::registerOpenMVCam(const QString board, const QString id)
 {
+    return;
     if(!m_formKey.isEmpty())
     {
         QNetworkAccessManager manager(this);
@@ -4089,8 +4184,6 @@ void OpenMVPlugin::setPortPath(bool silent)
         m_pathButton->setText((!m_portPath.isEmpty()) ? Tr::tr("Drive: %L1").arg(m_portPath) : Tr::tr("Drive:"));
 
         Core::IEditor *editor = Core::EditorManager::currentEditor();
-        m_openDriveFolderAction->setEnabled(!m_portPath.isEmpty());
-        m_configureSettingsAction->setEnabled(!m_portPath.isEmpty());
         m_saveAction->setEnabled((!m_portPath.isEmpty()) && (editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false));
 
         m_frameBuffer->enableSaveTemplate(!m_portPath.isEmpty());
@@ -5384,6 +5477,10 @@ void OpenMVPlugin::openAprilTagGenerator(apriltag_family_t *family)
     free(family->name);
     free(family->codes);
     free(family);
+}
+
+void OpenMVPlugin::saveFileOverSerial(const QString &fileName, const QByteArray &fileData) {
+    // TODO
 }
 
 } // namespace Internal

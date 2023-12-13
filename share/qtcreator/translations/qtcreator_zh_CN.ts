@@ -8140,7 +8140,7 @@ Click the Ok button after your OpenMV Cam&apos;s DFU Bootloader has enumerated.<
     <message>
         <location line="+98"/>
         <source>Board: %L1</source>
-        <translation>董事会：%L1</translation>
+        <translation>开发板：%L1</translation>
     </message>
     <message>
         <location line="+2"/>

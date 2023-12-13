@@ -177,6 +177,11 @@ public slots:
     void bootloaderQSPIFMemtest();
     void close();
 
+    void querySaveFileStat(bool retry);
+    void createFile(int chunkSize, const QByteArray &name, const QByteArray &sha256);
+    void writeFile(const QByteArray &data, int size);
+    void verifyFile(int fileSize);
+
 public slots: // private
 
     void command();
@@ -222,6 +227,10 @@ signals:
     void bootloaderQSPIFMemtestDone(bool ok);
     void queueEmpty();
     void closeResponse();
+
+    void startQuerySaveFileStat();
+    void querySaveFileStatResp(int err);
+    void verifyFileResp(int err);
 
 private:
 

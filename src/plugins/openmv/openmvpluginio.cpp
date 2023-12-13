@@ -50,7 +50,14 @@ enum
     BOOTLDR_QSPIF_WRITE_CPL,
     BOOTLDR_QSPIF_LAYOUT_CPL,
     BOOTLDR_QSPIF_MEMTEST_CPL,
-    CLOSE_CPL
+    CLOSE_CPL,
+
+    USBDBG_CREATEFILE_CPL_0,
+    USBDBG_CREATEFILE_CPL_1,
+    USBDBG_WRITEFILE_CPL_0,
+    USBDBG_WRITEFILE_CPL_1,
+    USBDBG_VERIFYFILE_CPL,
+    USBDBG_QUERY_FILE_STAT_CPL,
 };
 
 static QByteArray byteSwap(QByteArray buffer, bool ok)
@@ -566,6 +573,46 @@ void OpenMVPluginIO::commandResult(const OpenMVPluginSerialPortCommandResult &co
                     emit closeResponse();
                     break;
                 }
+                case USBDBG_CREATEFILE_CPL_0:
+                {
+                    break;
+                }
+                case USBDBG_CREATEFILE_CPL_1:
+                {
+                    emit startQuerySaveFileStat();
+                    break;
+                }
+                case USBDBG_WRITEFILE_CPL_0:
+                {
+                    break;
+                }
+                case USBDBG_WRITEFILE_CPL_1:
+                {
+                    emit startQuerySaveFileStat();
+                    break;
+                }
+                case USBDBG_VERIFYFILE_CPL:
+                {
+                    int err = deserializeLong(data);
+
+                    emit verifyFileResp(err);
+                    break;
+                }
+                case USBDBG_QUERY_FILE_STAT_CPL:
+                {
+                    int err = deserializeLong(data);
+
+                    if(1024 <= err)
+                    {
+                        emit querySaveFileStatResp(err);
+                    }
+                    else
+                    {
+                        emit querySaveFileStatResp(-1);
+                    }
+
+                    break;
+                }
             }
 
             m_completionQueue.dequeue();
@@ -810,6 +857,34 @@ void OpenMVPluginIO::commandResult(const OpenMVPluginSerialPortCommandResult &co
                         }
 
                         emit closeResponse();
+                        break;
+                    }
+                    case USBDBG_CREATEFILE_CPL_0:
+                    {
+                        break;
+                    }
+                    case USBDBG_CREATEFILE_CPL_1:
+                    {
+                        emit startQuerySaveFileStat();
+                        break;
+                    }
+                    case USBDBG_WRITEFILE_CPL_0:
+                    {
+                        break;
+                    }
+                    case USBDBG_WRITEFILE_CPL_1:
+                    {
+                        emit startQuerySaveFileStat();
+                        break;
+                    }
+                    case USBDBG_VERIFYFILE_CPL:
+                    {
+                        emit verifyFileResp(-1);
+                        break;
+                    }
+                    case USBDBG_QUERY_FILE_STAT_CPL:
+                    {
+                        emit querySaveFileStatResp(-1);
                         break;
                     }
                 }
@@ -1474,6 +1549,70 @@ QByteArray OpenMVPluginIO::pasrsePrintData(const QByteArray &data)
 
     return buffer;
 }
+
+void OpenMVPluginIO::querySaveFileStat(bool retry)
+{
+    QByteArray buffer;
+    serializeByte(buffer, __USBDBG_CMD);
+    serializeByte(buffer, __USBDBG_QUERY_FILE_STAT);
+    serializeLong(buffer, 4);
+    m_postedQueue.enqueue(OpenMVPluginSerialPortCommand(buffer, 4, 30, 20));
+    m_completionQueue.enqueue(USBDBG_QUERY_FILE_STAT_CPL);
+    command();
+}
+
+void OpenMVPluginIO::createFile(int chunkSize, const QByteArray &name, const QByteArray &sha256)
+{
+    QByteArray buffer;
+    serializeByte(buffer, __USBDBG_CMD);
+    serializeByte(buffer, __USBDBG_CREATEFILE);
+    serializeLong(buffer, 104);
+    m_postedQueue.enqueue(OpenMVPluginSerialPortCommand(buffer, int(), 10, 10));
+    m_completionQueue.enqueue(USBDBG_CREATEFILE_CPL_0);
+    command();
+
+    buffer.clear();
+    serializeLong(buffer, chunkSize);
+    buffer.append(name);
+
+    if(name.size() != 68) {
+        buffer.append(QByteArray((68 - name.size()), 0));
+    }
+    buffer.append(sha256);
+    m_postedQueue.enqueue(OpenMVPluginSerialPortCommand(buffer, int(), 50, 50));
+    m_completionQueue.enqueue(USBDBG_CREATEFILE_CPL_1);
+    command();
+}
+
+void OpenMVPluginIO::writeFile(const QByteArray &data, int size)
+{
+    QByteArray buffer;
+    serializeByte(buffer, __USBDBG_CMD);
+    serializeByte(buffer, __USBDBG_WRITEFILE);
+    serializeLong(buffer, size);
+    m_postedQueue.enqueue(OpenMVPluginSerialPortCommand(buffer, int(), 2, 2));
+    m_completionQueue.enqueue(USBDBG_WRITEFILE_CPL_0);
+    command();
+
+    buffer.clear();
+    buffer.append(data.left(size));
+    m_postedQueue.enqueue(OpenMVPluginSerialPortCommand(buffer, int(), 3, 5));
+    m_completionQueue.enqueue(USBDBG_WRITEFILE_CPL_1);
+    command();
+}
+
+void OpenMVPluginIO::verifyFile(int fileSize)
+{
+    QByteArray buffer;
+    serializeByte(buffer, __USBDBG_CMD);
+    serializeByte(buffer, __USBDBG_VERIFYFILE);
+    serializeLong(buffer, 4);
+    int wait = int((fileSize / 1024) * 50);
+    m_postedQueue.enqueue(OpenMVPluginSerialPortCommand(buffer, 4, 50, wait));
+    m_completionQueue.enqueue(USBDBG_VERIFYFILE_CPL);
+    command();
+}
+
 
 } // namespace Internal
 } // namespace OpenMV

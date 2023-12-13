@@ -78,6 +78,11 @@
 #define __USBDBG_TX_INPUT                   0x11
 #define __USBDBG_TIME_INPUT                 0x12
 
+#define __USBDBG_CREATEFILE                 0x20
+#define __USBDBG_WRITEFILE                  0x21
+#define __USBDBG_QUERY_FILE_STAT            0xA0
+#define __USBDBG_VERIFYFILE                 0xA1
+
 #define __BOOTLDR_START                     static_cast<int>(0xABCD0001)
 #define __BOOTLDR_RESET                     static_cast<int>(0xABCD0002)
 #define __BOOTLDR_ERASE                     static_cast<int>(0xABCD0004)

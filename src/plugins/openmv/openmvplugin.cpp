@@ -1219,24 +1219,24 @@ void OpenMVPlugin::extensionsInitialized()
         QDialog *dialog = new QDialog(Core::ICore::dialogParent(),
                                       Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
                                           (Utils::HostOsInfo::isMacHost() ? Qt::WindowType(0) : Qt::WindowCloseButtonHint));
-        dialog->setWindowTitle(tr("Save file to CanMV Cam"));
+        dialog->setWindowTitle(Tr::tr("Save file to CanMV Cam"));
 
         QVBoxLayout *v_layout = new QVBoxLayout(dialog);
 
-        QLabel *label = new QLabel(tr("Select a file save to spec path"));
+        QLabel *label = new QLabel(Tr::tr("Select a file save to spec path"));
         v_layout->addWidget(label);
 
-        QLineEdit *filePathEdit = new QLineEdit(tr("filename.ext or /pathto/filename.ext"));
+        QLineEdit *filePathEdit = new QLineEdit(Tr::tr("filename.ext or /pathto/filename.ext"));
         v_layout->addWidget(filePathEdit);
 
         QWidget *widget = new QWidget();
         QHBoxLayout *h_layout = new QHBoxLayout(widget);
 
-        QLineEdit *fileNameEdit = new QLineEdit(tr("Please select a file"));
+        QLineEdit *fileNameEdit = new QLineEdit(Tr::tr("Please select a file"));
         fileNameEdit->setReadOnly(true);
         h_layout->addWidget(fileNameEdit);
 
-        QPushButton *openFileBtn = new QPushButton(tr("Open"), widget);
+        QPushButton *openFileBtn = new QPushButton(Tr::tr("Open"), widget);
         h_layout->addWidget(openFileBtn);
 
         connect(openFileBtn, &QPushButton::clicked, this, [this, fileNameEdit] {
@@ -1246,7 +1246,7 @@ void OpenMVPlugin::extensionsInitialized()
             QString fileName = QFileDialog::getOpenFileName(Core::ICore::dialogParent(),
                                                             QObject::tr("Select file send to CanMV board"),
                                                             settings->value(QStringLiteral("LastOpenFileToSave"), QDir::homePath()).toString(),
-                                                            QObject::tr("All Files (*.*)"));
+                                                            Tr::tr("All Files (*.*)"));
 
             if(!fileName.isEmpty())
             {
@@ -1275,20 +1275,14 @@ void OpenMVPlugin::extensionsInitialized()
         connect(box, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
         connect(box, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
 
-        if(dialog->exec() == QDialog::Accepted)
-        {
+        if(dialog->exec() == QDialog::Accepted) {
             QString fileName = fileNameEdit->text();
             QString targetPath = filePathEdit->text();
 
             QFileInfo filInfo(fileName);
             QString newFileName = filInfo.fileName();
 
-            if(targetPath.contains(QStringLiteral(" ")))
-            {
-                // QMessageBox::critical(Core::ICore::dialogParent(),
-                //     tr("Save file to CanMV Cam"),
-                //     tr("Path %L1 invaild.").arg(targetPath));
-                // return;
+            if(targetPath.contains(QStringLiteral(" "))) {
                 targetPath = newFileName;
             }
 
@@ -1296,12 +1290,10 @@ void OpenMVPlugin::extensionsInitialized()
 
             QFile file(fileName);
 
-            if(file.open(QIODevice::ReadOnly))
-            {
+            if(file.open(QIODevice::ReadOnly)) {
                 QByteArray data = file.readAll();
 
-                if((file.error() == QFile::NoError) && (!data.isEmpty()))
-                {
+                if((file.error() == QFile::NoError) && (!data.isEmpty())) {
                     file.close();
 
                     // check user spec the path is vaild.
@@ -1310,20 +1302,17 @@ void OpenMVPlugin::extensionsInitialized()
                                               tr("Save file to CanMV Cam"),
                                               tr("%L1 is too long.").arg(fileName));
                     }
-                    else
-                    {
+                    else {
                         saveFileOverSerial(targetPath, data);
                     }
                 }
-                else
-                {
+                else {
                     QMessageBox::critical(Core::ICore::dialogParent(),
                                           tr("Save file to CanMV Cam"),
                                           tr("Read %L1 failed.").arg(fileName));
                 }
             }
-            else
-            {
+            else {
                 QMessageBox::critical(Core::ICore::dialogParent(),
                                       tr("Save file to CanMV Cam"),
                                       tr("Open %L1 failed.").arg(fileName));
@@ -1922,7 +1911,7 @@ void OpenMVPlugin::extensionsInitialized()
 
         if(m_connected)
         {
-            m_saveAction->setEnabled((!m_portPath.isEmpty()) && (editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false));
+            m_saveAction->setEnabled(true);
             m_saveFileAction->setEnabled(true);
             m_startAction->setEnabled((!m_running) && (editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false));
             m_startAction->setVisible(!m_running);
@@ -1943,7 +1932,7 @@ void OpenMVPlugin::extensionsInitialized()
         if(m_connected)
         {
             Core::IEditor *editor = Core::EditorManager::currentEditor();
-            m_saveAction->setEnabled((!m_portPath.isEmpty()) && (editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false));
+            m_saveAction->setEnabled(true);
             m_saveFileAction->setEnabled(true);
             m_startAction->setEnabled((!running) && (editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false));
             m_startAction->setVisible(!running);
@@ -3794,39 +3783,7 @@ void OpenMVPlugin::saveScript()
         if((answer == QMessageBox::Yes) || (answer == QMessageBox::No))
         {
             QByteArray contents = Core::EditorManager::currentEditor() ? Core::EditorManager::currentEditor()->document() ? Core::EditorManager::currentEditor()->document()->contents() : QByteArray() : QByteArray();
-
-            if(importHelper(contents))
-            {
-                Utils::FileSaver file(Utils::FilePath::fromString(m_portPath).pathAppended(QStringLiteral("main.py")));
-
-                if(!file.hasError())
-                {
-                    if(answer == QMessageBox::Yes)
-                    {
-                        contents = loadFilter(contents);
-                    }
-
-                    if((!file.write(contents)) || (!file.finalize()))
-                    {
-                        QMessageBox::critical(Core::ICore::dialogParent(),
-                            Tr::tr("Save Script"),
-                            Tr::tr("Error: %L1!").arg(file.errorString()));
-                    }
-                    else
-                    {
-                        // Extra disk activity to flush changes...
-                        QFile temp(QDir::cleanPath(QDir::fromNativeSeparators(m_portPath)) + QStringLiteral("/openmv.null"));
-                        if(temp.open(QIODevice::WriteOnly)) temp.write(QByteArray(FILE_FLUSH_BYTES, 0));
-                        temp.remove();
-                    }
-                }
-                else
-                {
-                    QMessageBox::critical(Core::ICore::dialogParent(),
-                        Tr::tr("Save Script"),
-                        Tr::tr("Error: %L1!").arg(file.errorString()));
-                }
-            }
+            saveFileOverSerial(QStringLiteral("main.py"), contents);
         }
     }
     else
@@ -4184,7 +4141,7 @@ void OpenMVPlugin::setPortPath(bool silent)
         m_pathButton->setText((!m_portPath.isEmpty()) ? Tr::tr("Drive: %L1").arg(m_portPath) : Tr::tr("Drive:"));
 
         Core::IEditor *editor = Core::EditorManager::currentEditor();
-        m_saveAction->setEnabled((!m_portPath.isEmpty()) && (editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false));
+        m_saveAction->setEnabled(editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false);
 
         m_frameBuffer->enableSaveTemplate(!m_portPath.isEmpty());
         m_frameBuffer->enableSaveDescriptor(!m_portPath.isEmpty());
@@ -5480,7 +5437,205 @@ void OpenMVPlugin::openAprilTagGenerator(apriltag_family_t *family)
 }
 
 void OpenMVPlugin::saveFileOverSerial(const QString &fileName, const QByteArray &fileData) {
-    // TODO
+    if(!m_working)
+    {
+        if(fileName.size() > 63) {
+            QMessageBox::warning(Core::ICore::dialogParent(),
+                                 tr("Save File"),
+                                 QObject::tr("File name too long."));
+            return;
+        }
+
+        QByteArray contents(fileData);
+
+        int chunkSize = 256;
+        int fileSize = contents.size();
+
+        QByteArray ctxSha256 = QCryptographicHash::hash(contents, QCryptographicHash::Sha256);
+
+        int err = int();
+        int *errPtr = &err;
+
+        QMetaObject::Connection conn = connect(
+            m_iodevice, &OpenMVPluginIO::querySaveFileStatResp,
+            this, [errPtr] (int err) {
+                *errPtr = err;
+            }
+        );
+
+        QMetaObject::Connection queryConn = connect(
+            m_iodevice, &OpenMVPluginIO::startQuerySaveFileStat,
+            this, [this] {
+                m_iodevice->querySaveFileStat(false);
+            }
+        );
+
+        m_working = true;
+
+        {
+            QEventLoop loop;
+            connect(m_iodevice, &OpenMVPluginIO::querySaveFileStatResp, &loop, &QEventLoop::quit);
+
+            m_iodevice->createFile(chunkSize, fileName.toLatin1(), ctxSha256);
+            loop.exec();
+
+            // qDebug() << err;
+
+            if(USBDBG_SVFILE_ERR_NONE != err) {
+                m_working = false;
+                m_iodevice->getTimeout(); // clear
+
+                disconnect(conn);
+                disconnect(queryConn);
+
+                QMessageBox::critical(Core::ICore::dialogParent(),
+                                      tr("Save File"),
+                                      tr("Create File Failed. %L1").arg(err));
+
+                return;
+            }
+        }
+
+        int retry = 0, currPos = 0, totalSize = fileSize;
+
+        QProgressDialog dialog(tr("Write %L1").arg(fileName), tr("Cancel"), 0, 0, Core::ICore::dialogParent(),
+                               Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::CustomizeWindowHint |
+                                   (Utils::HostOsInfo::isLinuxHost() ? Qt::WindowDoesNotAcceptFocus : Qt::WindowType(0)));
+        dialog.setWindowModality(Qt::ApplicationModal);
+        dialog.setAttribute(Qt::WA_ShowWithoutActivating);
+
+        dialog.setMinimum(0);
+        dialog.setMaximum(totalSize + 1);
+
+        dialog.show();
+
+        forever
+        {
+            QEventLoop loop;
+            connect(m_iodevice, &OpenMVPluginIO::querySaveFileStatResp, &loop, &QEventLoop::quit);
+
+            int perSize = (totalSize - currPos) > chunkSize ? chunkSize : (totalSize - currPos);
+
+            // qDebug() << "write" << perSize << "total" << totalSize << "curr" << currPos << "chunk" << chunkSize << "contents size" << contents.size();
+
+            err = -2;
+            if(0x00 == retry)
+            {
+                m_iodevice->writeFile(contents, perSize);
+            }
+            else
+            {
+                m_iodevice->querySaveFileStat(true);
+            }
+
+            loop.exec();
+
+            if(USBDBG_SVFILE_ERR_NONE != err) {
+                retry++;
+
+                if((retry <= 50) && ((-1) == err)) {
+                    continue;
+                }
+                m_working = false;
+                m_iodevice->getTimeout(); // clear
+
+                dialog.close();
+
+                disconnect(conn);
+                disconnect(queryConn);
+
+                QMessageBox::critical(Core::ICore::dialogParent(),
+                                      tr("Save File"),
+                                      tr("Write File Failed. %L1").arg(err));
+                return;
+            } else {
+                retry = 0;
+
+                currPos += perSize;
+                // contents = contents.mid(currPos);
+                contents.remove(0, perSize);
+
+                dialog.setValue(currPos);
+
+                if(currPos >= totalSize)
+                {
+                    break;
+                }
+            }
+
+            QApplication::processEvents();
+
+            if(dialog.wasCanceled())
+            {
+                m_working = false;
+                m_iodevice->getTimeout(); // clear
+
+                dialog.close();
+
+                disconnect(conn);
+                disconnect(queryConn);
+
+                return;
+            }
+        }
+
+        // dialog.close();
+
+        disconnect(conn);
+        disconnect(queryConn);
+
+        {
+            // QThread::msleep(1000);
+            QEventLoop loop;
+            QTimer::singleShot(1000, &loop, &QEventLoop::quit);
+            loop.exec();
+        }
+
+        {
+            int vErr = int();
+            int *vErrPtr = &vErr;
+
+            QEventLoop loop;
+            connect(m_iodevice, &OpenMVPluginIO::verifyFileResp, &loop, &QEventLoop::quit);
+
+            QMetaObject::Connection verifyConn = connect(m_iodevice, &OpenMVPluginIO::verifyFileResp,
+                                                         this, [this, vErrPtr] (int err) {
+                                                             *vErrPtr = err;
+                                                         });
+
+            m_iodevice->verifyFile(fileSize);
+
+            loop.exec();
+            disconnect(verifyConn);
+
+            dialog.setValue(totalSize + 1);
+            QThread::msleep(100);
+            dialog.close();
+
+            if(USBDBG_SVFILE_VERIFY_ERR_NONE != vErr) {
+
+                m_working = false;
+                m_iodevice->getTimeout(); // clear
+
+                QMessageBox::critical(Core::ICore::dialogParent(),
+                                      tr("Save File"),
+                                      tr("Verify File Failed. %L1").arg(vErr));
+                return;
+            }
+
+            QMessageBox::information(Core::ICore::dialogParent(),
+                                     tr("Save File"),
+                                     tr("Save File Success"));
+        }
+
+        m_working = false;
+    }
+    else
+    {
+        QMessageBox::critical(Core::ICore::dialogParent(),
+                              tr("Save File"),
+                              tr("Busy... please wait..."));
+    }
 }
 
 } // namespace Internal

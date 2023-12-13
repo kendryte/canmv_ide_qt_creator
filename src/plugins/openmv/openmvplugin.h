@@ -203,7 +203,15 @@
 #define FLASH_SECTOR_ERASE 4096 // Flash sector size in bytes.
 #define FOLDER_SCAN_TIME 10000 // in ms
 
-#define USBDBG_SVFILE_ERR_NONE      (1024 + 0)
+#define USBDBG_SVFILE_ERR_NONE            (1024 + 0)
+#define USBDBG_SVFILE_ERR_PATH_ERR        (1024 + 1)
+#define USBDBG_SVFILE_ERR_CHKSUM_ERR      (1024 + 2)
+#define USBDBG_SVFILE_ERR_WRITE_ERR       (1024 + 3)
+#define USBDBG_SVFILE_ERR_CHUNK_ERR       (1024 + 4)
+
+#define USBDBG_SVFILE_VERIFY_NOT_OPEN     (1024 + 5)
+#define USBDBG_SVFILE_VERIFY_SHA2_ERR     (1024 + 6)
+#define USBDBG_SVFILE_VERIFY_ERR_NONE     (1024 + 7)
 
 namespace OpenMV {
 namespace Internal {

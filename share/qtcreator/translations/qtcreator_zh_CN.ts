@@ -669,13 +669,13 @@
         <location line="+22"/>
         <source>All Files (*.*)</source>
         <comment>On Windows</comment>
-        <translation>全部文件 （*。*）</translation>
+        <translation>所有文件(*.*）</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>All Files (*)</source>
         <comment>On Linux/macOS</comment>
-        <translation>所有文件 (*)</translation>
+        <translation>所有文件(*)</translation>
     </message>
     <message>
         <location line="+74"/>
@@ -6094,7 +6094,7 @@ Please close any programs that are viewing/editing OpenMV IDE&apos;s application
         <location line="+2"/>
         <location line="+13"/>
         <source>TensorFlow Model (*.tflite);;Neural Network Model (*.network);;Label Files (*.txt);;All Files (*.*)</source>
-        <translation>TensorFlow模型(*.tflite);;神经网络模型(*.network);;标签文件(*.txt);;全部文件(*.*)</translation>
+        <translation>TensorFlow模型(*.tflite);;神经网络模型(*.network);;标签文件(*.txt);;所有文件(*.*)</translation>
     </message>
     <message>
         <location line="-4"/>

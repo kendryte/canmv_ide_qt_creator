@@ -16,7 +16,7 @@
 #define WRITE_TIMEOUT 6000
 #define SERIAL_READ_TIMEOUT 10000
 #define WIFI_READ_TIMEOUT 10000
-#define SERIAL_READ_STALL_TIMEOUT 1000
+#define SERIAL_READ_STALL_TIMEOUT 2000
 #define WIFI_READ_STALL_TIMEOUT 3000
 #define BOOTLOADER_WRITE_TIMEOUT 6
 #define BOOTLOADER_READ_TIMEOUT 10
@@ -586,6 +586,7 @@ void OpenMVPluginSerialPort_private::command(const OpenMVPluginSerialPortCommand
             QElapsedTimer elaspedTimer2;
             elaspedTimer.start();
             elaspedTimer2.start();
+            static unsigned noResponseCount = 0;
 
             do
             {
@@ -656,17 +657,22 @@ void OpenMVPluginSerialPort_private::command(const OpenMVPluginSerialPortCommand
 
             if(response.size() >= responseLen)
             {
+                noResponseCount = 0;
                 emit commandResult(OpenMVPluginSerialPortCommandResult(true, response.left(command.m_responseLen)));
             }
             else
             {
-                if(m_port)
-                {
-                    delete m_port;
-                    m_port = Q_NULLPTR;
+                noResponseCount += 1;
+                qDebug() << "no response:" << noResponseCount;
+                if (noResponseCount > 20) {
+                    if(m_port) {
+                        delete m_port;
+                        m_port = Q_NULLPTR;
+                    }
+                    emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
+                } else {
+                    emit commandResult(OpenMVPluginSerialPortCommandResult(true, QByteArray()));
                 }
-
-                emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
             }
         }
     }

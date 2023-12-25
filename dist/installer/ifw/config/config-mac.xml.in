@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <Installer>
-    <Name>OpenMV IDE</Name>
+    <Name>CanMV IDE</Name>
     <Version>{version}</Version>
-    <Title>OpenMV IDE {display_version}</Title>
-    <Publisher>OpenMV, LLC</Publisher>
-    <ProductUrl>https://openmv.io</ProductUrl>
+    <Title>CanMV IDE {display_version}</Title>
+    <Publisher>Canaan Inc.</Publisher>
+    <ProductUrl>https://www.canaan.io</ProductUrl>
 
-    <MaintenanceToolName>Uninstall OpenMV IDE</MaintenanceToolName>
-    <TargetDir>@homeDir@/Applications/OpenMV IDE</TargetDir>
+    <MaintenanceToolName>Uninstall CanMV IDE</MaintenanceToolName>
+    <TargetDir>@homeDir@/Applications/CanMV IDE</TargetDir>
     <AllowSpaceInPath>true</AllowSpaceInPath>
     <ControlScript>controlscript.qs</ControlScript>
 </Installer>

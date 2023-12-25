@@ -1853,13 +1853,17 @@ void OpenMVPlugin::extensionsInitialized()
     helpMenu->addAction(aboutCommand, Core::Constants::G_HELP_ABOUT);
     connect(aboutAction, &QAction::triggered, this, [] {
         QMessageBox::about(Core::ICore::dialogParent(), Tr::tr("About CanMV IDE"), Tr::tr(
-        "<p><b>About CanMV IDE %L1</b></p>"
+        "<p><b>About CanMV IDE %L1-%L4</b></p>"
         "<p>By: Canaan Inc.</p>"
         "<p>Based on OpenMV IDE By Ibrahim Abdelkader & Kwabena W. Agyeman</p>"
         "<p><b>GNU GENERAL PUBLIC LICENSE</b></p>"
         "<p>Copyright (C) %L2 %L3</p>"
         "<p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the <a href=\"https://github.com/openmv/qt-creator/raw/master/LICENSE.GPL3-EXCEPT\">GNU General Public License</a> for more details.</p>"
-        ).arg(QLatin1String(Core::Constants::IDE_VERSION_LONG)).arg(QLatin1String(Core::Constants::IDE_YEAR)).arg(QLatin1String(Core::Constants::IDE_AUTHOR)) + Tr::tr(
+        )
+        .arg(QLatin1String(Core::Constants::IDE_VERSION_LONG))
+        .arg(QLatin1String(Core::Constants::IDE_YEAR))
+        .arg(QLatin1String(Core::Constants::IDE_AUTHOR))
+        .arg(QLatin1String("0")) + Tr::tr(
         "<p><b>Credits</b></p>") + Tr::tr(
         "<p>OpenMV IDE English translation by Kwabena W. Agyeman.</p>")
         );

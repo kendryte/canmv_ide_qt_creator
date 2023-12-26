@@ -39,7 +39,7 @@ Component.prototype.createOperationsForArchive = function(archive)
     if (systemInfo.productType !== "osx" || archive.indexOf('qtcreator.7z') !== -1)
         component.addOperation("Extract", archive, "@TargetDir@");
     else
-        component.addOperation("Extract", archive, "@TargetDir@/OpenMV IDE.app/Contents");
+        component.addOperation("Extract", archive, "@TargetDir@/CanMV IDE.app/Contents");
 }
 
 Component.prototype.beginInstallation = function()
@@ -47,14 +47,14 @@ Component.prototype.beginInstallation = function()
     component.qtCreatorBinaryPath = installer.value("TargetDir");
 
     if (installer.value("os") == "win") {
-        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "\\bin\\openmvide.exe";
+        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "\\bin\\canmvide.exe";
         component.qtCreatorBinaryPath = component.qtCreatorBinaryPath.replace(/\//g, "\\");
     }
     else if (installer.value("os") == "x11") {
-        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/bin/openmvide";
+        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/bin/canmvide";
     }
     else if (installer.value("os") == "mac") {
-        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/OpenMV IDE.app/Contents/MacOS/OpenMV IDE";
+        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/CanMV IDE.app/Contents/MacOS/CanMV IDE";
     }
 
     if ( installer.value("os") === "win" )
@@ -83,14 +83,14 @@ Component.prototype.createOperations = function()
     {
         component.addOperation( "CreateShortcut",
                                 component.qtCreatorBinaryPath,
-                                "@StartMenuDir@/OpenMV IDE.lnk",
+                                "@StartMenuDir@/CanMV IDE.lnk",
                                 "workingDirectory=@homeDir@" );
         component.addOperation( "CreateShortcut",
                                 component.qtCreatorBinaryPath,
-                                "@DesktopDir@/OpenMV IDE.lnk",
+                                "@DesktopDir@/CanMV IDE.lnk",
                                 "workingDirectory=@homeDir@" );
         component.addOperation( "CreateShortcut",
-                                "@TargetDir@/OpenMVIDEUninst.exe",
+                                "@TargetDir@/CanMVIDEUninst.exe",
                                 "@StartMenuDir@/Uninstall.lnk",
                                 "workingDirectory=@homeDir@" );
         // component.addElevatedOperation("Execute", "{1,256}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\pybcdc\\pybcdc.cmd");
@@ -102,15 +102,15 @@ Component.prototype.createOperations = function()
         var udevRulesCheck = false;
         component.addOperation( "InstallIcons", "@TargetDir@/share/icons" );
         component.addOperation( "CreateDesktopEntry",
-                                "OpenMV-openmvide.desktop",
+                                "CanMV-openmvide.desktop",
                                 "Type=Application\n" +
-                                "Name=OpenMV IDE\n" +
-                                "GenericName=OpenMV IDE\n" +
-                                "Comment=The IDE of choice for OpenMV Cam Development.\n" +
+                                "Name=CanMV IDE\n" +
+                                "GenericName=CanMV IDE\n" +
+                                "Comment=The IDE of choice for CanMV Cam Development.\n" +
                                 "Exec=" + component.qtCreatorBinaryPath + " %F\n" +
-                                "Icon=OpenMV-openmvide\n" +
+                                "Icon=CanMV-canmvide\n" +
                                 "Terminal=false\n" +
-                                "Categories=Development;IDE;Electronics;OpenMV;\n" +
+                                "Categories=Development;IDE;Electronics;CanMV;\n" +
                                 "MimeType=text/x-python;\n" +
                                 "Keywords=embedded electronics;electronics;microcontroller;micropython;computer vision;machine vision;\n" +
                                 "StartupWMClass=openmvide\n" );
@@ -151,9 +151,9 @@ Component.prototype.createOperations = function()
 
         if ((!installLibrariesCheck) || (!udevRulesCheck)) {
             component.addOperation( "AppendFile", "@TargetDir@/README.txt",
-                                    "Please run setup.sh to install OpenMV IDE dependencies:\n\n" +
+                                    "Please run setup.sh to install CanMV IDE dependencies:\n\n" +
                                     "    ./setup.sh\n\n" +
-                                    "And then run OpenMV IDE:\n\n" +
+                                    "And then run CanMV IDE:\n\n" +
                                     "    ./bin/openmvide\n" );
         }
 
@@ -268,7 +268,7 @@ Component.prototype.targetChanged = function(text)
             widget.complete = true;
 
             if (installer.value("os") == "win") {
-                if (installer.fileExists(text) && installer.fileExists(text + "/OpenMVIDEUninst.exe")) {
+                if (installer.fileExists(text) && installer.fileExists(text + "/CanMVIDEUninst.exe")) {
                     widget.warning.setText("<p style=\"color: red\">Existing installation detected and will be overwritten.</p>");
                 }
                 else if (installer.fileExists(text)) {
@@ -279,7 +279,7 @@ Component.prototype.targetChanged = function(text)
                 }
             }
             else if (installer.value("os") == "x11") {
-                if (installer.fileExists(text) && installer.fileExists(text + "/OpenMVIDEUninstaller")) {
+                if (installer.fileExists(text) && installer.fileExists(text + "/CanMVIDEUninstaller")) {
                     widget.warning.setText("<p style=\"color: red\">Existing installation detected and will be overwritten.</p>");
                 }
                 else if (installer.fileExists(text)) {
@@ -323,15 +323,15 @@ Component.prototype.licenseCheckPageEntered = function()
     var dir = installer.value("TargetDir");
 
     if (installer.value("os") == "win") {
-        if (installer.fileExists(dir) && installer.fileExists(dir + "/OpenMVIDEUninst.exe")) {
+        if (installer.fileExists(dir) && installer.fileExists(dir + "/CanMVIDEUninst.exe")) {
             installer.execute("cmd.exe", ["/c", "echo function Controller(){gui.clickButton(buttons.NextButton);gui.clickButton(buttons.NextButton);installer.uninstallationFinished.connect(this,this.uninstallationFinished);}Controller.prototype.uninstallationFinished=function(){gui.clickButton(buttons.NextButton);}Controller.prototype.FinishedPageCallback=function(){gui.clickButton(buttons.FinishButton);}> %Temp%\\auto_uninstall.qs"])
-            installer.execute(dir + "/OpenMVIDEUninst.exe", "--script=" + temp + "/auto_uninstall.qs");
+            installer.execute(dir + "/CanMVIDEUninst.exe", "--script=" + temp + "/auto_uninstall.qs");
         }
     }
     else if (installer.value("os") == "x11") {
-        if (installer.fileExists(dir) && installer.fileExists(dir + "/OpenMVIDEUninstaller")) {
+        if (installer.fileExists(dir) && installer.fileExists(dir + "/CanMVIDEUninstaller")) {
             installer.execute("bash", ["-c", "echo 'function Controller(){gui.clickButton(buttons.NextButton);gui.clickButton(buttons.NextButton);installer.uninstallationFinished.connect(this,this.uninstallationFinished);}Controller.prototype.uninstallationFinished=function(){gui.clickButton(buttons.NextButton);}Controller.prototype.FinishedPageCallback=function(){gui.clickButton(buttons.FinishButton);}' > /tmp/auto_uninstall.qs"])
-            installer.execute(dir + "/OpenMVIDEUninstaller", "--script=" + temp + "/auto_uninstall.qs");
+            installer.execute(dir + "/CanMVIDEUninstaller", "--script=" + temp + "/auto_uninstall.qs");
         }
     }
 }

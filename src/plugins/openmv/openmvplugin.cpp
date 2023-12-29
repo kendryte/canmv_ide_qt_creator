@@ -443,7 +443,7 @@ bool OpenMVPlugin::initialize(const QStringList &arguments, QString *errorMessag
 
         if(!Core::ICore::userResourcePath().removeRecursively(&error))
         {
-            QMessageBox::critical(Q_NULLPTR, QString(), Tr::tr("\n\nPlease close any programs that are viewing/editing OpenMV IDE's application data and then restart OpenMV IDE!"));
+            QMessageBox::critical(Q_NULLPTR, QString(), Tr::tr("\n\nPlease close any programs that are viewing/editing CanMV IDE's application data and then restart CanMV IDE!"));
             ok = false;
         }
         else
@@ -454,7 +454,7 @@ bool OpenMVPlugin::initialize(const QStringList &arguments, QString *errorMessag
             {
                 if(!oldUserResourcesPath.removeRecursively(&error))
                 {
-                    QMessageBox::critical(Q_NULLPTR, QString(), Tr::tr("\n\nPlease close any programs that are viewing/editing OpenMV IDE's application data and then restart OpenMV IDE!"));
+                    QMessageBox::critical(Q_NULLPTR, QString(), Tr::tr("\n\nPlease close any programs that are viewing/editing CanMV IDE's application data and then restart CanMV IDE!"));
                     ok = false;
                 }
             }
@@ -473,7 +473,7 @@ bool OpenMVPlugin::initialize(const QStringList &arguments, QString *errorMessag
                                                           copyOperator))
 
                     {
-                        QMessageBox::critical(Q_NULLPTR, QString(), Tr::tr("\n\nPlease close any programs that are viewing/editing OpenMV IDE's application data and then restart OpenMV IDE!"));
+                        QMessageBox::critical(Q_NULLPTR, QString(), Tr::tr("\n\nPlease close any programs that are viewing/editing CanMV IDE's application data and then restart CanMV IDE!"));
                         ok = false;
                         break;
                     }

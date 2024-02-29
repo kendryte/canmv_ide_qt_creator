@@ -5945,8 +5945,8 @@ Please close any programs that are viewing/editing OpenMV IDE&apos;s application
     </message>
     <message>
         <location line="+6"/>
-        <source>Auto Reconnect to OpenMV Cam</source>
-        <translation>自动重新连接到 OpenMV Cam</translation>
+        <source>Auto Reconnect to CanMV</source>
+        <translation>自动重新连接到 CanMV</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -6293,8 +6293,8 @@ Please close any programs that are viewing/editing OpenMV IDE&apos;s application
     </message>
     <message>
         <location line="+14"/>
-        <source>OpenMV Forums</source>
-        <translation>OpenMV论坛</translation>
+        <source>Canaan Forums</source>
+        <translation>嘉楠开发者社区</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -6319,13 +6319,13 @@ Please close any programs that are viewing/editing OpenMV IDE&apos;s application
     <message>
         <location line="+16"/>
         <location line="+5"/>
-        <source>About OpenMV IDE</source>
-        <translation>关于OpenMV IDE</translation>
+        <source>About CanMV IDE</source>
+        <translation>关于CanMV IDE</translation>
     </message>
     <message>
         <location line="-5"/>
-        <source>About OpenMV IDE...</source>
-        <translation>关于OpenMV IDE ...</translation>
+        <source>About CanMV IDE...</source>
+        <translation>关于CanMV IDE ...</translation>
     </message>
     <message>
         <location line="+5"/>

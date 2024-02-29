@@ -2796,6 +2796,58 @@ bool OpenMVPlugin::delayedInitialize()
                     Tr::tr("Failed to create the documents folder!"));
     }
 
+    // open default file
+    Core::EditorManager::cutForwardNavigationHistory();
+    Core::EditorManager::addCurrentPositionToNavigationHistory();
+    QString titlePattern = Tr::tr("untitled_$.py");
+
+    QByteArray data =
+        QStringLiteral("# Untitled - By: %L1 - %L2\n"
+                       "\n"
+                       "import sensor, image, time\n"
+                       "\n"
+                       "sensor.reset()\n"
+                       "sensor.set_pixformat(sensor.RGB565)\n"
+                       "sensor.set_framesize(sensor.QVGA)\n"
+                       "sensor.skip_frames(time = 2000)\n"
+                       "\n"
+                       "clock = time.clock()\n"
+                       "\n"
+                       "while(True):\n"
+                       "    clock.tick()\n"
+                       "    img = sensor.snapshot()\n"
+                       "    print(clock.fps())\n").arg(Utils::Environment::systemEnvironment().toDictionary().userName()).arg(QDate::currentDate().toString()).toUtf8();
+
+    if((m_sensorType == QStringLiteral("HM01B0")) ||
+        (m_sensorType == QStringLiteral("HM0360")) ||
+        (m_sensorType == QStringLiteral("MT9V0X2")) ||
+        (m_sensorType == QStringLiteral("MT9V0X4")))
+    {
+        data = data.replace(QByteArrayLiteral("sensor.set_pixformat(sensor.RGB565)"), QByteArrayLiteral("sensor.set_pixformat(sensor.GRAYSCALE)"));
+        if(m_sensorType == QStringLiteral("HM01B0")) data = data.replace(QByteArrayLiteral("sensor.set_framesize(sensor.VGA)"), QByteArrayLiteral("sensor.set_framesize(sensor.QVGA)"));
+    }
+
+    TextEditor::BaseTextEditor *editor = qobject_cast<TextEditor::BaseTextEditor *>(Core::EditorManager::openEditorWithContents(Core::Constants::K_DEFAULT_TEXT_EDITOR_ID, &titlePattern, data));
+
+    if(editor)
+    {
+        QTemporaryFile file(QDir::tempPath() + QDir::separator() + QString(editor->document()->displayName()).replace(QStringLiteral(".py"), QStringLiteral("_XXXXXX.py")));
+
+        if(file.open())
+        {
+            if(file.write(data) == data.size())
+            {
+                file.setAutoRemove(false);
+                file.close();
+
+                editor->document()->setProperty("diffFilePath", QFileInfo(file).canonicalFilePath());
+                Core::EditorManager::addCurrentPositionToNavigationHistory();
+                editor->editorWidget()->configureGenericHighlighter();
+                Core::EditorManager::activateEditor(editor);
+            }
+        }
+    }
+
     return true;
 }
 

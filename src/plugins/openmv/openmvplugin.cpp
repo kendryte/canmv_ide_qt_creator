@@ -1058,6 +1058,7 @@ void OpenMVPlugin::extensionsInitialized()
         QByteArray data =
         QStringLiteral("# Untitled - By: %L1 - %L2\n"
                        "\n"
+
                        "import sensor, image, time\n"
                        "\n"
                        "sensor.reset()\n"
@@ -1071,14 +1072,10 @@ void OpenMVPlugin::extensionsInitialized()
                        "    clock.tick()\n"
                        "    img = sensor.snapshot()\n"
                        "    print(clock.fps())\n").arg(Utils::Environment::systemEnvironment().toDictionary().userName()).arg(QDate::currentDate().toString()).toUtf8();
-
-        if((m_sensorType == QStringLiteral("HM01B0")) ||
-           (m_sensorType == QStringLiteral("HM0360")) ||
-           (m_sensorType == QStringLiteral("MT9V0X2")) ||
-           (m_sensorType == QStringLiteral("MT9V0X4")))
-        {
-            data = data.replace(QByteArrayLiteral("sensor.set_pixformat(sensor.RGB565)"), QByteArrayLiteral("sensor.set_pixformat(sensor.GRAYSCALE)"));
-            if(m_sensorType == QStringLiteral("HM01B0")) data = data.replace(QByteArrayLiteral("sensor.set_framesize(sensor.VGA)"), QByteArrayLiteral("sensor.set_framesize(sensor.QVGA)"));
+        auto scriptPath = Core::ICore::userResourcePath(QStringLiteral("examples/01-Media/camera_480p.py")).toString();
+        QFile file(scriptPath);
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            data = file.readAll();
         }
 
         TextEditor::BaseTextEditor *editor = qobject_cast<TextEditor::BaseTextEditor *>(Core::EditorManager::openEditorWithContents(Core::Constants::K_DEFAULT_TEXT_EDITOR_ID, &titlePattern, data));
@@ -2817,6 +2814,11 @@ bool OpenMVPlugin::delayedInitialize()
                        "    clock.tick()\n"
                        "    img = sensor.snapshot()\n"
                        "    print(clock.fps())\n").arg(Utils::Environment::systemEnvironment().toDictionary().userName()).arg(QDate::currentDate().toString()).toUtf8();
+    auto scriptPath = Core::ICore::userResourcePath(QStringLiteral("examples/01-Media/camera_480p.py")).toString();
+    QFile file(scriptPath);
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        data = file.readAll();
+    }
 
     if((m_sensorType == QStringLiteral("HM01B0")) ||
         (m_sensorType == QStringLiteral("HM0360")) ||

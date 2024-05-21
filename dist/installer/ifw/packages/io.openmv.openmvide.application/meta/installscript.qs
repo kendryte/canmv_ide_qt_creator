@@ -83,11 +83,11 @@ Component.prototype.createOperations = function()
     {
         component.addOperation( "CreateShortcut",
                                 component.qtCreatorBinaryPath,
-                                "@StartMenuDir@/CanMV IDE.lnk",
+                                "@StartMenuDir@/CanMV IDE 4.lnk",
                                 "workingDirectory=@homeDir@" );
         component.addOperation( "CreateShortcut",
                                 component.qtCreatorBinaryPath,
-                                "@DesktopDir@/CanMV IDE.lnk",
+                                "@DesktopDir@/CanMV IDE 4.lnk",
                                 "workingDirectory=@homeDir@" );
         component.addOperation( "CreateShortcut",
                                 "@TargetDir@/CanMVIDEUninst.exe",
@@ -104,8 +104,8 @@ Component.prototype.createOperations = function()
         component.addOperation( "CreateDesktopEntry",
                                 "CanMV-openmvide.desktop",
                                 "Type=Application\n" +
-                                "Name=CanMV IDE\n" +
-                                "GenericName=CanMV IDE\n" +
+                                "Name=CanMV IDE 4\n" +
+                                "GenericName=CanMV IDE 4\n" +
                                 "Comment=The IDE of choice for CanMV Cam Development.\n" +
                                 "Exec=" + component.qtCreatorBinaryPath + " %F\n" +
                                 "Icon=CanMV-canmvide\n" +

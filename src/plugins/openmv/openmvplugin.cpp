@@ -2059,6 +2059,11 @@ void OpenMVPlugin::extensionsInitialized()
         }
     });
 
+    m_rotate = new QToolButton;
+    m_rotate->setText(Tr::tr("Rotate"));
+    m_rotate->setToolTip(Tr::tr("Rotate the frame buffer"));
+    styledBar0Layout->addWidget(m_rotate);
+
     Utils::ElidingLabel *disableLabel = new Utils::ElidingLabel(Tr::tr("Frame Buffer Disabled - click the disable button again to enable (top right)"));
     disableLabel->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred, QSizePolicy::Label));
     disableLabel->setStyleSheet(QString(QStringLiteral("background-color:%1;color:%2;padding:4px;")).
@@ -2089,6 +2094,7 @@ void OpenMVPlugin::extensionsInitialized()
     tempWidget0->setLayout(tempLayout0);
 
     connect(zoomButton, &QToolButton::toggled, m_frameBuffer, &OpenMVPluginFB::enableFitInView);
+    connect(m_rotate, &QToolButton::clicked, m_frameBuffer, &OpenMVPluginFB::rotate);
     connect(m_iodevice, &OpenMVPluginIO::frameBufferData, this, [this] (const QPixmap &data) { if(!m_disableFrameBuffer->isChecked()) m_frameBuffer->frameBufferData(data); });
     connect(m_frameBuffer, &OpenMVPluginFB::saveImage, this, &OpenMVPlugin::saveImage);
     connect(m_frameBuffer, &OpenMVPluginFB::saveTemplate, this, &OpenMVPlugin::saveTemplate);
@@ -2674,6 +2680,7 @@ void OpenMVPlugin::extensionsInitialized()
 
 bool OpenMVPlugin::delayedInitialize()
 {
+#if USE_WIFI_CONNECT
     QUdpSocket *socket = new QUdpSocket(this);
 
     connect(socket, &QUdpSocket::readyRead, this, [this, socket] {
@@ -2714,7 +2721,7 @@ bool OpenMVPlugin::delayedInitialize()
             }
         }
     });
-
+#endif
     // Scan Serial Ports
     {
         QThread *thread = new QThread;
@@ -2775,7 +2782,7 @@ bool OpenMVPlugin::delayedInitialize()
         timer->start(1000);
         QTimer::singleShot(0, scanSerialPortsThread, &ScanSerialPortsThread::scanSerialPortsSlot);
     }
-
+#if USE_WIFI_CONNECT
     if(!socket->bind(OPENMVCAM_BROADCAST_PORT))
     {
         delete socket;
@@ -2785,7 +2792,7 @@ bool OpenMVPlugin::delayedInitialize()
             Tr::tr("Another application is using the OpenMV Cam broadcast discovery port. "
                "Please close that application and restart OpenMV IDE to enable WiFi programming."));
     }
-
+#endif
     if(!QDir().mkpath(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + QStringLiteral("/OpenMV")))
     {
         QMessageBox::warning(Core::ICore::dialogParent(),

@@ -11,7 +11,7 @@
 namespace OpenMV {
 namespace Internal {
 
-OpenMVPluginFB::OpenMVPluginFB(QWidget *parent) : QGraphicsView(parent), m_enableSaveTemplate(false), m_enableSaveDescriptor(false), m_enableInteraction(true)
+OpenMVPluginFB::OpenMVPluginFB(QWidget *parent) : QGraphicsView(parent), m_enableSaveTemplate(false), m_enableSaveDescriptor(false), m_enableInteraction(true), rotation(0)
 {
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -103,6 +103,11 @@ void OpenMVPluginFB::endImageWriter()
     m_tempFile = Q_NULLPTR;
 }
 
+void OpenMVPluginFB::rotate() {
+    rotation += 90;
+    myFitInView(m_pixmap);
+}
+
 void OpenMVPluginFB::enableFitInView(bool enable)
 {
     m_enableFitInView = enable;
@@ -145,6 +150,7 @@ void OpenMVPluginFB::frameBufferData(const QPixmap &data)
     }
 
     myFitInView(m_pixmap);
+    // setTransform(transform);
 
     // Broadcast the new pixmap
     emit pixmapUpdate(getPixmap());
@@ -397,7 +403,7 @@ void OpenMVPluginFB::myFitInView(QGraphicsPixmapItem *item)
     {
         matrix.scale(scale, scale);
     }
-
+    matrix.rotate(rotation);
     setTransform(matrix);
 
     if(item) centerOn(item);

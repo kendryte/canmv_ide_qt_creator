@@ -413,6 +413,8 @@ private:
 
     QToolButton *m_jpgCompress;
     QToolButton *m_disableFrameBuffer;
+    QToolButton *m_rotate;
+
     OpenMVDatasetEditor *m_datasetEditor;
     OpenMVPluginFB *m_frameBuffer;
     OpenMVPluginHistogram *m_histogram;

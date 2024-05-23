@@ -28,6 +28,7 @@ public slots:
     void enableSaveTemplate(bool enable) { m_enableSaveTemplate = enable; }
     void enableSaveDescriptor(bool enable) { m_enableSaveDescriptor = enable; }
     void private_timerCallBack();
+    void rotate();
 
 signals:
 
@@ -67,6 +68,8 @@ private:
     QTemporaryFile *m_tempFile;
     QElapsedTimer m_elaspedTimer;
     QQueue<qint64> m_previousElaspedTimers;
+
+    qreal rotation;
 };
 
 } // namespace Internal

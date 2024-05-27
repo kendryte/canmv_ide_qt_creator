@@ -2,7 +2,7 @@ TEMPLATE = app
 #OPENMV-DIFF#
 #TARGET = qtcreator.sh
 #OPENMV-DIFF#
-TARGET = canmvide.sh
+TARGET = canmvide_k210.sh
 #CANMV-DIFF# TARGET += openmv.png
 # TARGET += canmv.png
 #OPENMV-DIFF#
@@ -14,7 +14,7 @@ OBJECTS_DIR =
 #OPENMV-DIFF#
 #PRE_TARGETDEPS = $$PWD/qtcreator.sh
 #OPENMV-DIFF#
-PRE_TARGETDEPS = $$PWD/canmvide.sh
+PRE_TARGETDEPS = $$PWD/canmvide_k210.sh
 #CANMV-DIFF# PRE_TARGETDEPS += $$PWD/openmv.png
 # PRE_TARGETDEPS += $$PWD/canmv.png
 #OPENMV-DIFF#
@@ -22,7 +22,7 @@ PRE_TARGETDEPS = $$PWD/canmvide.sh
 #OPENMV-DIFF#
 #QMAKE_LINK = cp $$PWD/qtcreator.sh $@ && : IGNORE REST OF LINE:
 #OPENMV-DIFF#
-QMAKE_LINK = cp $$PWD/canmvide.sh $@ && : IGNORE REST OF LINE:
+QMAKE_LINK = cp $$PWD/canmvide_k210.sh $@ && : IGNORE REST OF LINE:
 #CANMV-DIFF# QMAKE_LINK += cp $$PWD/openmv.png $@ && : IGNORE REST OF LINE:
 # QMAKE_LINK += cp $$PWD/canmv.png $@ && : IGNORE REST OF LINE:
 #OPENMV-DIFF#
@@ -32,7 +32,7 @@ CONFIG -= qt separate_debug_info gdb_dwarf_index
 #OPENMV-DIFF#
 #QMAKE_CLEAN = qtcreator.sh
 #OPENMV-DIFF#
-QMAKE_CLEAN = canmvide.sh
+QMAKE_CLEAN = canmvide_k210.sh
 #CANMV-DIFF# QMAKE_CLEAN += openmv.png
 # QMAKE_CLEAN += canmv.png
 #OPENMV-DIFF#
@@ -43,7 +43,7 @@ INSTALLS    += target
 #OPENMV-DIFF#
 #DISTFILES = $$PWD/qtcreator.sh
 #OPENMV-DIFF#
-DISTFILES = $$PWD/canmvide.sh
+DISTFILES = $$PWD/canmvide_k210.sh
 #CANMV-DIFF# DISTFILES += $$PWD/openmv.png
 # DISTFILES += $$PWD/canmv.png
 #OPENMV-DIFF#

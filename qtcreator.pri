@@ -92,7 +92,7 @@ osx {
     #IDE_APP_TARGET   = "OpenMV IDE"
     #OPENMV-DIFF#
     #CANMV-DIFF#
-    IDE_APP_TARGET   = "CanMV IDE"
+    IDE_APP_TARGET   = "CanMV IDE K210"
     #CANMV-DIFF#
 
     IDE_APP_BUNDLE = $$IDE_APP_PATH/$${IDE_APP_TARGET}.app
@@ -118,7 +118,7 @@ osx {
     #IDE_APP_TARGET   = openmvide
     #OPENMV-DIFF#
     #CANMV-DIFF#
-    IDE_APP_TARGET   = canmvide
+    IDE_APP_TARGET   = canmvide_k210
     #CANMV-DIFF#
 
     # target output path if not set manually

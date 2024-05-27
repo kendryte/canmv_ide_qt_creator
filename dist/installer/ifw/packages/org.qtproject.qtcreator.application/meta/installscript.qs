@@ -56,7 +56,7 @@ Component.prototype.createOperationsForArchive = function(archive)
         //OPENMV-DIFF//
         //component.addOperation("Extract", archive, "@TargetDir@/Qt Creator.app/Contents");
         //OPENMV-DIFF//
-        component.addOperation("Extract", archive, "@TargetDir@/CanMV IDE.app/Contents");
+        component.addOperation("Extract", archive, "@TargetDir@/CanMV IDE K210.app/Contents");
         //OPENMV-DIFF//
 }
 
@@ -68,7 +68,7 @@ Component.prototype.beginInstallation = function()
         //OPENMV-DIFF//
         //component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "\\bin\\qtcreator.exe";
         //OPENMV-DIFF//
-        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "\\bin\\canmvide.exe";
+        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "\\bin\\canmvide_k210.exe";
         //OPENMV-DIFF//
         component.qtCreatorBinaryPath = component.qtCreatorBinaryPath.replace(/\//g, "\\");
     }
@@ -76,14 +76,14 @@ Component.prototype.beginInstallation = function()
         //OPENMV-DIFF//
         //component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/bin/qtcreator";
         //OPENMV-DIFF//
-        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/bin/canmvide";
+        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/bin/canmvide_k210";
         //OPENMV-DIFF//
     }
     else if (installer.value("os") == "mac") {
         //OPENMV-DIFF//
         //component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/Qt Creator.app/Contents/MacOS/Qt Creator";
         //OPENMV-DIFF//
-        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/CanMV IDE.app/Contents/MacOS/CanMV IDE";
+        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/CanMV IDE K210.app/Contents/MacOS/CanMV IDE K210";
         //OPENMV-DIFF//
     }
 
@@ -185,15 +185,15 @@ Component.prototype.createOperations = function()
                                 //OPENMV-DIFF//
                                 //"@StartMenuDir@/Qt Creator " + installer.value("ProductVersion") + ".lnk",
                                 //OPENMV-DIFF//
-                                "@StartMenuDir@/CanMV IDE.lnk",
+                                "@StartMenuDir@/CanMV IDE K210.lnk",
                                 //OPENMV-DIFF//
                                 "workingDirectory=@homeDir@" );
         component.addOperation( "CreateShortcut",
                                 component.qtCreatorBinaryPath,
-                                "@DesktopDir@/CanMV IDE.lnk",
+                                "@DesktopDir@/CanMV IDE K210.lnk",
                                 "workingDirectory=@homeDir@" );
         component.addOperation( "CreateShortcut",
-                                "@TargetDir@/CanMVIDEUninst.exe",
+                                "@TargetDir@/CanMVIDEK210Uninst.exe",
                                 "@StartMenuDir@/Uninstall.lnk",
                                 "workingDirectory=@homeDir@" );
         //CANMV-DIFF// component.addElevatedOperation("Execute", "{2,512}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\ftdi\\ftdi.cmd");
@@ -232,12 +232,12 @@ Component.prototype.createOperations = function()
                                 //OPENMV-DIFF//
                                 //"QtProject-qtcreator.desktop",
                                 //OPENMV-DIFF//
-                                "CanMV-canmvide.desktop",
+                                "CanMV-canmvide-k210.desktop",
                                 //OPENMV-DIFF//
                                 //OPENMV-DIFF//
                                 //"Type=Application\nExec=" + component.qtCreatorBinaryPath + "\nPath=@TargetDir@\nName=Qt Creator\nGenericName=The IDE of choice for Qt development.\nGenericName[de]=Die IDE der Wahl zur Qt Entwicklung\nIcon=QtProject-qtcreator\nTerminal=false\nCategories=Development;IDE;Qt;\nMimeType=text/x-c++src;text/x-c++hdr;text/x-xsrc;application/x-designer;application/vnd.nokia.qt.qmakeprofile;application/vnd.nokia.xml.qt.resource;text/x-qml;text/x-qt.qml;text/x-qt.qbs;"
                                 //OPENMV-DIFF//
-                                "Type=Application\nExec=" + component.qtCreatorBinaryPath + "\nIcon=@TargetDir@/bin/canmv.png\nPath=@TargetDir@\nName=CanMV IDE\nGenericName=The IDE of choice for CanMV Cam Development.\nTerminal=false\nCategories=Development;IDE;\nMimeType=text/x-python;"
+                                "Type=Application\nExec=" + component.qtCreatorBinaryPath + "\nIcon=@TargetDir@/bin/canmv.png\nPath=@TargetDir@\nName=CanMV IDE K210\nGenericName=The IDE of choice for CanMV Cam Development.\nTerminal=false\nCategories=Development;IDE;\nMimeType=text/x-python;"
                                 //OPENMV-DIFF//
                                 );
         //OPENMV-DIFF//
@@ -310,7 +310,7 @@ Component.prototype.targetChanged = function(text)
             widget.complete = true;
 
             if (installer.value("os") == "win") {
-                if (installer.fileExists(text) && installer.fileExists(text + "/CanMVIDEUninst.exe")) {
+                if (installer.fileExists(text) && installer.fileExists(text + "/CanMVIDEK210Uninst.exe")) {
                     widget.warning.setText("<p style=\"color: red\">Existing installation detected and will be overwritten.</p>");
                 }
                 else if (installer.fileExists(text)) {
@@ -321,7 +321,7 @@ Component.prototype.targetChanged = function(text)
                 }
             }
             else if (installer.value("os") == "x11") {
-                if (installer.fileExists(text) && installer.fileExists(text + "/CanMVIDEUninstaller")) {
+                if (installer.fileExists(text) && installer.fileExists(text + "/CanMVIDEK210Uninstaller")) {
                     widget.warning.setText("<p style=\"color: red\">Existing installation detected and will be overwritten.</p>");
                 }
                 else if (installer.fileExists(text)) {
@@ -365,15 +365,15 @@ Component.prototype.licenseCheckPageEntered = function()
     var dir = installer.value("TargetDir");
 
     if (installer.value("os") == "win") {
-        if (installer.fileExists(dir) && installer.fileExists(dir + "/CanMVIDEUninst.exe")) {
+        if (installer.fileExists(dir) && installer.fileExists(dir + "/CanMVIDEK210Uninst.exe")) {
             installer.execute("cmd.exe", ["/c", "echo function Controller(){gui.clickButton(buttons.NextButton);gui.clickButton(buttons.NextButton);installer.uninstallationFinished.connect(this,this.uninstallationFinished);}Controller.prototype.uninstallationFinished=function(){gui.clickButton(buttons.NextButton);}Controller.prototype.FinishedPageCallback=function(){gui.clickButton(buttons.FinishButton);}> %Temp%\\auto_uninstall.qs"])
-            installer.execute(dir + "/CanMVIDEUninst.exe", "--script=" + temp + "/auto_uninstall.qs");
+            installer.execute(dir + "/CanMVIDEK210Uninst.exe", "--script=" + temp + "/auto_uninstall.qs");
         }
     }
     else if (installer.value("os") == "x11") {
-        if (installer.fileExists(dir) && installer.fileExists(dir + "/CanMVIDEUninstaller")) {
+        if (installer.fileExists(dir) && installer.fileExists(dir + "/CanMVIDEK210Uninstaller")) {
             installer.execute("bash", ["-c", "echo 'function Controller(){gui.clickButton(buttons.NextButton);gui.clickButton(buttons.NextButton);installer.uninstallationFinished.connect(this,this.uninstallationFinished);}Controller.prototype.uninstallationFinished=function(){gui.clickButton(buttons.NextButton);}Controller.prototype.FinishedPageCallback=function(){gui.clickButton(buttons.FinishButton);}' > /tmp/auto_uninstall.qs"])
-            installer.execute(dir + "/CanMVIDEUninstaller", "--script=" + temp + "/auto_uninstall.qs");
+            installer.execute(dir + "/CanMVIDEK210Uninstaller", "--script=" + temp + "/auto_uninstall.qs");
         }
     }
 }

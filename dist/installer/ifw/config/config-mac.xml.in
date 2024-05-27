@@ -17,14 +17,14 @@
 <!--</Installer>-->
 <!--OPENMV-DIFF-->
 <Installer>
-    <Name>CanMV IDE</Name>
+    <Name>CanMV IDE K210</Name>
     <Version>{version}</Version>
     <Title>CanMV IDE {display_version}</Title>
     <Publisher>Canaan Inc.</Publisher>
     <ProductUrl>https://canaan-creative.com/</ProductUrl>
 
-    <MaintenanceToolName>Uninstall CanMV IDE</MaintenanceToolName>
-    <TargetDir>@homeDir@/Applications/CanMV IDE</TargetDir>
+    <MaintenanceToolName>Uninstall CanMV IDE K210</MaintenanceToolName>
+    <TargetDir>@homeDir@/Applications/CanMV IDE K210</TargetDir>
     <AllowSpaceInPath>true</AllowSpaceInPath>
     <ControlScript>controlscript.qs</ControlScript>
 </Installer>

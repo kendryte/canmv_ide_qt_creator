@@ -83,11 +83,11 @@ Component.prototype.createOperations = function()
     {
         component.addOperation( "CreateShortcut",
                                 component.qtCreatorBinaryPath,
-                                "@StartMenuDir@/CanMV IDE 4.lnk",
+                                "@StartMenuDir@/CanMV K230 IDE.lnk",
                                 "workingDirectory=@homeDir@" );
         component.addOperation( "CreateShortcut",
                                 component.qtCreatorBinaryPath,
-                                "@DesktopDir@/CanMV IDE 4.lnk",
+                                "@DesktopDir@/CanMV K230 IDE.lnk",
                                 "workingDirectory=@homeDir@" );
         component.addOperation( "CreateShortcut",
                                 "@TargetDir@/CanMVIDEUninst.exe",

@@ -112,7 +112,7 @@ MainWindow::MainWindow() :
     m_settingsDatabase(new SettingsDatabase(QFileInfo(PluginManager::settings()->fileName()).path(),
                                             //OPENMV-DIFF// QLatin1String("QtCreator"),
                                             //CANMV-DIFF// QLatin1String("OpenMVIDE"),
-                                            QLatin1String("CanMVIDE"),
+                                            QLatin1String("CanMVIDEK210"),
                                             this)),
     m_printer(0),
     m_windowSupport(0),
@@ -156,12 +156,12 @@ MainWindow::MainWindow() :
 
     //OPENMV-DIFF// setWindowTitle(tr("Qt Creator"));
     //CanMV-DIFF//  setWindowTitle(tr("OpenMV IDE"));
-    setWindowTitle(tr("CanMV IDE"));
+    setWindowTitle(tr("CanMV IDE K210"));
     //OPENMV-DIFF// if (HostOsInfo::isLinuxHost())
     //OPENMV-DIFF//     QApplication::setWindowIcon(Icons::QTLOGO_128.icon());
     //OPENMV-DIFF// QCoreApplication::setApplicationName(QLatin1String("QtCreator"));
     //CanMV-DIFF//  QCoreApplication::setApplicationName(QLatin1String("OpenMVIDE"));
-    QCoreApplication::setApplicationName(QLatin1String("CanMVIDE"));
+    QCoreApplication::setApplicationName(QLatin1String("CanMVIDE K210"));
     //OPENMV-DIFF// QCoreApplication::setApplicationVersion(QLatin1String(Constants::IDE_VERSION_LONG));
     QCoreApplication::setApplicationVersion(QLatin1String(Constants::OMV_IDE_VERSION_LONG));
     QCoreApplication::setOrganizationName(QLatin1String(Constants::IDE_SETTINGSVARIANT_STR));

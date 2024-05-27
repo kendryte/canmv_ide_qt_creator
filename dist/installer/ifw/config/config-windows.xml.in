@@ -17,15 +17,15 @@
 <!--</Installer>-->
 <!--OPENMV-DIFF-->
 <Installer>
-    <Name>CanMV IDE</Name>
+    <Name>CanMV IDE K210</Name>
     <Version>{version}</Version>
     <Title>CanMV IDE {display_version}</Title>
     <Publisher>Canaan Inc.</Publisher>
     <ProductUrl>https://canaan-creative.com/</ProductUrl>
 
-    <MaintenanceToolName>CanMVIDEUninst</MaintenanceToolName>
-    <TargetDir>@ApplicationsDir@/CanMV IDE</TargetDir>
-    <StartMenuDir>CanMV IDE</StartMenuDir>
+    <MaintenanceToolName>CanMVIDEK210Uninst</MaintenanceToolName>
+    <TargetDir>@ApplicationsDir@/CanMV IDE K210</TargetDir>
+    <StartMenuDir>CanMV IDE K210</StartMenuDir>
     <ControlScript>controlscript.qs</ControlScript>
 </Installer>
 <!--OPENMV-DIFF-->

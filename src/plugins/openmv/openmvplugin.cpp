@@ -272,7 +272,7 @@ bool OpenMVPlugin::initialize(const QStringList &arguments, QString *errorMessag
 
         if(!Utils::FileUtils::removeRecursively(Utils::FileName::fromString(Core::ICore::userResourcePath()), &error))
         {
-            QMessageBox::critical(Q_NULLPTR, QString(), tr("\n\nPlease close any programs that are viewing/editing OpenMV IDE's application data and then restart OpenMV IDE!"));
+            QMessageBox::critical(Q_NULLPTR, QString(), tr("\n\nPlease close any programs that are viewing/editing OpenMV IDE's application data and then restart OpenMV IDE!, 111%1").arg(Core::ICore::userResourcePath()));
             ok = false;
         }
         else
@@ -287,7 +287,7 @@ bool OpenMVPlugin::initialize(const QStringList &arguments, QString *errorMessag
                                                       Utils::FileName::fromString(Core::ICore::userResourcePath() + QLatin1Char('/') + dir),
                                                       &error))
                 {
-                    QMessageBox::critical(Q_NULLPTR, QString(), tr("\n\nPlease close any programs that are viewing/editing OpenMV IDE's application data and then restart OpenMV IDE!"));
+                    QMessageBox::critical(Q_NULLPTR, QString(), tr("\n\nPlease close any programs that are viewing/editing OpenMV IDE's application data and then restart OpenMV IDE!, 222 %1 %2").arg(Core::ICore::resourcePath() + QLatin1Char('/') + dir).arg(Core::ICore::userResourcePath() + QLatin1Char('/') + dir));
                     ok = false;
                     break;
                 }
@@ -887,7 +887,7 @@ bool OpenMVPlugin::initialize(const QStringList &arguments, QString *errorMessag
 void OpenMVPlugin::extensionsInitialized()
 {
     //CanMV-DIFF// QApplication::setApplicationDisplayName(tr("OpenMV IDE"));
-    QApplication::setApplicationDisplayName(tr("CanMV IDE"));
+    QApplication::setApplicationDisplayName(tr("CanMV IDE K210"));
     QApplication::setWindowIcon(QIcon(QStringLiteral(ICON_PATH)));
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1640,13 +1640,13 @@ void OpenMVPlugin::extensionsInitialized()
 
     QAction *aboutAction = new QAction(QIcon::fromTheme(QStringLiteral("help-about")),
     //CANMV-DIFF//     Utils::HostOsInfo::isMacHost() ? tr("About OpenMV IDE") : tr("About OpenMV IDE..."), this);
-            Utils::HostOsInfo::isMacHost() ? tr("About CanMV IDE") : tr("About CanMV IDE..."), this);
+            Utils::HostOsInfo::isMacHost() ? tr("About CanMV IDE K210") : tr("About CanMV IDE K210..."), this);
     aboutAction->setMenuRole(QAction::AboutRole);
      Core::Command *aboutCommand = Core::ActionManager::registerAction(aboutAction, Core::Id("CanMV.About"));
     helpMenu->addAction(aboutCommand, Core::Constants::G_HELP_ABOUT);
     connect(aboutAction, &QAction::triggered, this, [this] {
-        QMessageBox::about(Core::ICore::dialogParent(), tr("About CanMV IDE"), tr(
-        "<p><b>About CanMV IDE %L1</b></p>"
+        QMessageBox::about(Core::ICore::dialogParent(), tr("About CanMV IDE K210"), tr(
+        "<p><b>About CanMV IDE K210 %L1</b></p>"
         "<p>Commit: <b>%L4</b></p>"
         "<p>By: Canaan Inc. Derived from OpenMV IDE</p>"
         "<p>Copyright (C) %L2 %L3</p>"

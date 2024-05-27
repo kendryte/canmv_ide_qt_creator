@@ -42,4 +42,4 @@ fi
 # Add OpenMV IDE library path
 LD_LIBRARY_PATH=$libdir:$libdir/qtcreator$qtlibpath${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 export LD_LIBRARY_PATH
-exec "$bindir/canmvide" ${1+"$@"}
+exec "$bindir/canmvide_k210" ${1+"$@"}

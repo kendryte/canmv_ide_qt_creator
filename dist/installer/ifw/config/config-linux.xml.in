@@ -17,15 +17,15 @@
 <!--</Installer>-->
 <!--OPENMV-DIFF-->
 <Installer>
-    <Name>CanMV IDE</Name>
+    <Name>CanMV IDE K210</Name>
     <Version>{version}</Version>
     <Title>CanMV IDE {display_version}</Title>
     <Publisher>Canaan Inc.</Publisher>
     <ProductUrl>https://canaan-creative.com/</ProductUrl>
 
-    <MaintenanceToolName>CanMVIDEUninstaller</MaintenanceToolName>
-    <TargetDir>@homeDir@/canmvide</TargetDir>
-    <AdminTargetDir>/opt/canmvide</AdminTargetDir>
+    <MaintenanceToolName>CanMVIDEK210Uninstaller</MaintenanceToolName>
+    <TargetDir>@homeDir@/canmvide_k210</TargetDir>
+    <AdminTargetDir>/opt/canmvide_k210</AdminTargetDir>
     <ControlScript>controlscript.qs</ControlScript>
 </Installer>
 <!--OPENMV-DIFF-->

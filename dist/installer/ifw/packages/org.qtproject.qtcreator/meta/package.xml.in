@@ -10,8 +10,8 @@
 <!--</Package>-->
 <!--OPENMV-DIFF-->
 <Package>
-  <DisplayName>CanMV IDE</DisplayName>
-  <Description>Installs CanMV IDE.</Description>
+  <DisplayName>CanMV IDE K210</DisplayName>
+  <Description>Installs CanMV IDE K210.</Description>
   <Version>{version}</Version>
   <ReleaseDate>{date}</ReleaseDate>
   <Name>org.qtproject.qtcreator</Name>

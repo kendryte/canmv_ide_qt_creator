@@ -72,7 +72,7 @@ enum { OptionIndent = 4, DescriptionIndent = 34 };
 //const char appNameC[] = "OpenMV IDE";
 //OPENMV-DIFF//
 //CanMV-DIFF//
-const char appNameC[] = "CanMV IDE";
+const char appNameC[] = "CanMV IDE K210";
 //CanMV-DIFF//
 const char corePluginNameC[] = "Core";
 const char fixedOptionsC[] =
@@ -283,7 +283,7 @@ static QSettings *createUserSettings()
                          //QLatin1String("OpenMVIDE"));
                          //OPENMV-DIFF//
                          //CANMV_DIFF//
-                         QLatin1String("CanMVIDE"));
+                         QLatin1String("CanMVIDEK210"));
                          //CANMV_DIFF//
 }
 
@@ -456,7 +456,7 @@ int main(int argc, char **argv)
                                               //QLatin1String("OpenMVIDE"));
                                               //OPENMV-DIFF//
                                               //CanMV-DIFF//
-                                              QLatin1String("CanMVIDE"));
+                                              QLatin1String("CanMVIDEK210"));
                                               //CanMV-DIFF//
     PluginManager pluginManager;
     PluginManager::setPluginIID(QLatin1String("org.qt-project.Qt.QtCreatorPlugin"));

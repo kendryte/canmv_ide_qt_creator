@@ -86,7 +86,7 @@ def is_debug_build(install_dir):
     #return is_debug(os.path.join(install_dir, 'bin', 'openmvide.exe'))
     #OPENMV-DIFF#
     #CANMV-DIFF#
-    return is_debug(os.path.join(install_dir, 'bin', 'canmvide.exe'))
+    return is_debug(os.path.join(install_dir, 'bin', 'canmvide_k210.exe'))
     #CANMV-DIFF#
 
 def op_failed(details = None):

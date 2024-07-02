@@ -135,6 +135,12 @@ void OpenMVPluginFB::frameBufferData(const QPixmap &data)
 
     if(!data.isNull())
     {
+        if (rotation == 0) {
+            if (data.height() > data.width()) {
+                // rotate 270 deg
+                rotation = 270;
+            }
+        }
         m_pixmap = scene()->addPixmap(data);
     }
     else

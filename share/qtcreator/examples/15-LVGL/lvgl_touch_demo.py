@@ -2,13 +2,14 @@ from media.display import *
 from media.media import *
 import time, os, sys, gc
 import lvgl as lv
+from machine import TOUCH
 
-DISPLAY_WIDTH = ALIGN_UP(1920, 16)
-DISPLAY_HEIGHT = 1080
+DISPLAY_WIDTH = ALIGN_UP(800, 16)
+DISPLAY_HEIGHT = 480
 
 def display_init():
     # use hdmi for display
-    Display.init(Display.LT9611, to_ide = False)
+    Display.init(Display.ST7701, width = 800, height = 480, to_ide = True)
     # init media manager
     MediaManager.init()
 
@@ -26,9 +27,34 @@ def disp_drv_flush_cb(disp_drv, area, color):
     if disp_drv.flush_is_last() == True:
         if disp_img1.virtaddr() == uctypes.addressof(color.__dereference__()):
             Display.show_image(disp_img1)
+            print(f"disp disp_img1 {disp_img1}")
         else:
             Display.show_image(disp_img2)
+            print(f"disp disp_img2 {disp_img2}")
+        time.sleep(0.01)
+
     disp_drv.flush_ready()
+
+class touch_screen():
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.state = lv.INDEV_STATE.RELEASED
+
+        self.indev_drv = lv.indev_create()
+        self.indev_drv.set_type(lv.INDEV_TYPE.POINTER)
+        self.indev_drv.set_read_cb(self.callback)
+        self.touch = TOUCH(0)
+
+    def callback(self, driver, data):
+        x, y, state = self.x, self.y, lv.INDEV_STATE.RELEASED
+        tp = self.touch.read(1)
+        if len(tp):
+            x, y, event = tp[0].x, tp[0].y, tp[0].event
+            if event == 2 or event == 3:
+                state = lv.INDEV_STATE.PRESSED
+        data.point = lv.point_t({'x': y, 'y': DISPLAY_HEIGHT - x})
+        data.state = state
 
 def lvgl_init():
     global disp_img1, disp_img2
@@ -39,6 +65,7 @@ def lvgl_init():
     disp_img1 = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.ARGB8888)
     disp_img2 = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.ARGB8888)
     disp_drv.set_draw_buffers(disp_img1.bytearray(), disp_img2.bytearray(), disp_img1.size(), lv.DISP_RENDER_MODE.DIRECT)
+    tp = touch_screen()
 
 def lvgl_deinit():
     global disp_img1, disp_img2
@@ -46,6 +73,14 @@ def lvgl_deinit():
     lv.deinit()
     del disp_img1
     del disp_img2
+
+def btn_clicked_event(event):
+    btn = lv.btn.__cast__(event.get_target())
+    label = lv.label.__cast__(btn.get_user_data())
+    if "on" == label.get_text():
+        label.set_text("off")
+    else:
+        label.set_text("on")
 
 def user_gui_init():
     res_path = "/sdcard/app/tests/lvgl/data/"
@@ -97,6 +132,13 @@ def user_gui_init():
     animimg0.set_repeat_count(lv.ANIM_REPEAT_INFINITE)
     animimg0.start()
 
+    btn = lv.btn(lv.scr_act())
+    btn.align(lv.ALIGN.CENTER, 0, lv.pct(25))
+    label = lv.label(btn)
+    label.set_text('on')
+    btn.set_user_data(label)
+    btn.add_event(btn_clicked_event, lv.EVENT.CLICKED, None)
+
 def main():
     os.exitpoint(os.EXITPOINT_ENABLE)
     try:
@@ -106,7 +148,7 @@ def main():
         while True:
             time.sleep_ms(lv.task_handler())
     except BaseException as e:
-        print(f"Exception {e}")
+        sys.print_exception(e)
     lvgl_deinit()
     display_deinit()
     gc.collect()

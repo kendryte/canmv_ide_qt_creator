@@ -905,6 +905,7 @@ OpenMVTerminal::OpenMVTerminal(const QString &displayName, QSettings *settings, 
     m_colorSpace->insertItem(GRAYSCALE_COLOR_SPACE, Tr::tr("Grayscale Color Space"));
     m_colorSpace->insertItem(LAB_COLOR_SPACE, Tr::tr("LAB Color Space"));
     m_colorSpace->insertItem(YUV_COLOR_SPACE, Tr::tr("YUV Color Space"));
+    m_colorSpace->insertItem(NONE_COLOR_SPACE, Tr::tr("None"));
     m_colorSpace->setToolTip(Tr::tr("Use Grayscale/LAB for color tracking"));
     styledBar1Layout->addWidget(m_colorSpace);
 

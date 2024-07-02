@@ -1055,27 +1055,23 @@ void OpenMVPlugin::extensionsInitialized()
         Core::EditorManager::addCurrentPositionToNavigationHistory();
         QString titlePattern = Tr::tr("untitled_$.py");
 
-        QByteArray data =
-        QStringLiteral("# Untitled - By: %L1 - %L2\n"
-                       "\n"
+        QByteArray data = QStringLiteral("# Untitled - By: %L1 - %L2\n\n").arg(Utils::Environment::systemEnvironment().toDictionary().userName()).arg(QDate::currentDate().toString()).toUtf8();
 
-                       "import sensor, image, time\n"
-                       "\n"
-                       "sensor.reset()\n"
-                       "sensor.set_pixformat(sensor.RGB565)\n"
-                       "sensor.set_framesize(sensor.QVGA)\n"
-                       "sensor.skip_frames(time = 2000)\n"
-                       "\n"
-                       "clock = time.clock()\n"
-                       "\n"
-                       "while(True):\n"
-                       "    clock.tick()\n"
-                       "    img = sensor.snapshot()\n"
-                       "    print(clock.fps())\n").arg(Utils::Environment::systemEnvironment().toDictionary().userName()).arg(QDate::currentDate().toString()).toUtf8();
-        auto scriptPath = Core::ICore::userResourcePath(QStringLiteral("examples/01-Media/camera_480p.py")).toString();
+        auto scriptPath = Core::ICore::userResourcePath(QStringLiteral("examples/00-Micropython-Basics/demo_sys_info.py")).toString();
         QFile file(scriptPath);
         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            data = file.readAll();
+            data += file.readAll();
+        } else {
+            data += QStringLiteral(
+                        "import sys\n\n"
+                        "for i in range(0, 2):\n"
+                        "    print(\"hello canmv\")\n"
+                        "    print(\"hello \", end=\"canmv\\n\")\n\n"
+                        "print(\"implementation:\", sys.implementation)\n"
+                        "print(\"platform:\", sys.platform)\n"
+                        "print(\"path:\", sys.path)\n"
+                        "print(\"Python version:\", sys.version)\n"
+                        ).toUtf8();
         }
 
         TextEditor::BaseTextEditor *editor = qobject_cast<TextEditor::BaseTextEditor *>(Core::EditorManager::openEditorWithContents(Core::Constants::K_DEFAULT_TEXT_EDITOR_ID, &titlePattern, data));
@@ -1844,13 +1840,13 @@ void OpenMVPlugin::extensionsInitialized()
     });
 
     QAction *aboutAction = new QAction(QIcon::fromTheme(QStringLiteral("help-about")),
-        Utils::HostOsInfo::isMacHost() ? Tr::tr("About CanMV IDE") : Tr::tr("About CanMV IDE..."), this);
+        Utils::HostOsInfo::isMacHost() ? Tr::tr("About CanMV IDE K230") : Tr::tr("About CanMV IDE K230..."), this);
     aboutAction->setMenuRole(QAction::AboutRole);
      Core::Command *aboutCommand = Core::ActionManager::registerAction(aboutAction, Utils::Id("OpenMV.About"));
     helpMenu->addAction(aboutCommand, Core::Constants::G_HELP_ABOUT);
     connect(aboutAction, &QAction::triggered, this, [] {
-        QMessageBox::about(Core::ICore::dialogParent(), Tr::tr("About CanMV IDE"), Tr::tr(
-        "<p><b>About CanMV IDE %L1-%L4</b></p>"
+        QMessageBox::about(Core::ICore::dialogParent(), Tr::tr("About CanMV IDE K230"), Tr::tr(
+        "<p><b>About CanMV IDE K230 %L1-%L4</b></p>"
         "<p>By: Canaan Inc.</p>"
         "<p>Based on OpenMV IDE By Ibrahim Abdelkader & Kwabena W. Agyeman</p>"
         "<p><b>GNU GENERAL PUBLIC LICENSE</b></p>"
@@ -2143,7 +2139,8 @@ void OpenMVPlugin::extensionsInitialized()
     colorSpace->insertItem(GRAYSCALE_COLOR_SPACE, Tr::tr("Grayscale Color Space"));
     colorSpace->insertItem(LAB_COLOR_SPACE, Tr::tr("LAB Color Space"));
     colorSpace->insertItem(YUV_COLOR_SPACE, Tr::tr("YUV Color Space"));
-    colorSpace->setCurrentIndex(RGB_COLOR_SPACE);
+    colorSpace->insertItem(NONE_COLOR_SPACE, Tr::tr("None"));
+    colorSpace->setCurrentIndex(NONE_COLOR_SPACE);
     colorSpace->setToolTip(Tr::tr("Use Grayscale/LAB for color tracking"));
     styledBar1Layout->addWidget(colorSpace);
 
@@ -2560,10 +2557,10 @@ void OpenMVPlugin::extensionsInitialized()
             editor = editors.first();
         }
     }
-
+    // FIXME
     if(editor ? (editor->document() ? editor->document()->contents().isEmpty() : true) : true)
     {
-        QString filePath = Core::ICore::userResourcePath(QStringLiteral("examples/00-HelloWorld/helloworld.py")).toString();
+        QString filePath = Core::ICore::userResourcePath(QStringLiteral("examples/99-HelloWorld/helloworld.py")).toString();
 
         QFile file(filePath);
 
@@ -2798,63 +2795,6 @@ bool OpenMVPlugin::delayedInitialize()
         QMessageBox::warning(Core::ICore::dialogParent(),
                     Tr::tr("Documents Folder Error"),
                     Tr::tr("Failed to create the documents folder!"));
-    }
-
-    // open default file
-    Core::EditorManager::cutForwardNavigationHistory();
-    Core::EditorManager::addCurrentPositionToNavigationHistory();
-    QString titlePattern = Tr::tr("untitled_$.py");
-
-    QByteArray data =
-        QStringLiteral("# Untitled - By: %L1 - %L2\n"
-                       "\n"
-                       "import sensor, image, time\n"
-                       "\n"
-                       "sensor.reset()\n"
-                       "sensor.set_pixformat(sensor.RGB565)\n"
-                       "sensor.set_framesize(sensor.QVGA)\n"
-                       "sensor.skip_frames(time = 2000)\n"
-                       "\n"
-                       "clock = time.clock()\n"
-                       "\n"
-                       "while(True):\n"
-                       "    clock.tick()\n"
-                       "    img = sensor.snapshot()\n"
-                       "    print(clock.fps())\n").arg(Utils::Environment::systemEnvironment().toDictionary().userName()).arg(QDate::currentDate().toString()).toUtf8();
-    auto scriptPath = Core::ICore::userResourcePath(QStringLiteral("examples/01-Media/camera_480p.py")).toString();
-    QFile file(scriptPath);
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        data = file.readAll();
-    }
-
-    if((m_sensorType == QStringLiteral("HM01B0")) ||
-        (m_sensorType == QStringLiteral("HM0360")) ||
-        (m_sensorType == QStringLiteral("MT9V0X2")) ||
-        (m_sensorType == QStringLiteral("MT9V0X4")))
-    {
-        data = data.replace(QByteArrayLiteral("sensor.set_pixformat(sensor.RGB565)"), QByteArrayLiteral("sensor.set_pixformat(sensor.GRAYSCALE)"));
-        if(m_sensorType == QStringLiteral("HM01B0")) data = data.replace(QByteArrayLiteral("sensor.set_framesize(sensor.VGA)"), QByteArrayLiteral("sensor.set_framesize(sensor.QVGA)"));
-    }
-
-    TextEditor::BaseTextEditor *editor = qobject_cast<TextEditor::BaseTextEditor *>(Core::EditorManager::openEditorWithContents(Core::Constants::K_DEFAULT_TEXT_EDITOR_ID, &titlePattern, data));
-
-    if(editor)
-    {
-        QTemporaryFile file(QDir::tempPath() + QDir::separator() + QString(editor->document()->displayName()).replace(QStringLiteral(".py"), QStringLiteral("_XXXXXX.py")));
-
-        if(file.open())
-        {
-            if(file.write(data) == data.size())
-            {
-                file.setAutoRemove(false);
-                file.close();
-
-                editor->document()->setProperty("diffFilePath", QFileInfo(file).canonicalFilePath());
-                Core::EditorManager::addCurrentPositionToNavigationHistory();
-                editor->editorWidget()->configureGenericHighlighter();
-                Core::EditorManager::activateEditor(editor);
-            }
-        }
     }
 
     return true;

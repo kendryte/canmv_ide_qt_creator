@@ -4,6 +4,8 @@
 #include "openmvtr.h"
 
 #include <utils/theme/theme.h>
+#include <QThread>
+#include <array>
 
 #define RGB_COLOR_SPACE_R 0
 #define RGB_COLOR_SPACE_G 1
@@ -138,6 +140,163 @@ static inline int getValue(int value, int channel)
             return value;
         }
     }
+}
+
+struct Histogram {
+    QVector<int> value;
+    int mean;
+    int median;
+    int mode;
+    int standardDeviation;
+    int min;
+    int max;
+    int lowerQuartile;
+    int upperQuartile;
+};
+
+static void statistics(struct Histogram& hist, unsigned total) {
+    unsigned medianOffset = (total + 1) / 2; // 1/2th
+    long long lq = ((total * 1) + 3) / 4; // 1/4th
+    long long uq = ((total * 3) + 3) / 4; // 3/4th
+
+    long long sum = 0;
+    long long avg = 0;
+    auto arr = &hist.value;
+    for (unsigned j = 0; j < arr->size(); j++) {
+        sum += (*arr)[j];
+        avg += (*arr)[j] * j;
+        if ((*arr)[j]) {
+            if (hist.min == 0) {
+                hist.min = j;
+            }
+            hist.max = j;
+        }
+
+        if ((sum >= medianOffset) && (hist.median == 0)) {
+            hist.median = j;
+        }
+        if ((sum >= lq) && (hist.lowerQuartile == 0)) {
+            hist.lowerQuartile = j;
+        }
+        if ((sum >= uq) && (hist.upperQuartile == 0)) {
+            hist.upperQuartile = j;
+        }
+        if ((*arr)[j] > (*arr)[hist.mode]) {
+            hist.mode = j;
+        }
+    }
+    hist.mean = (avg + total / 2) / total;
+    unsigned long long stCount = 0;
+    for (int j = 0; j < arr->size(); j++) {
+            stCount += (*arr)[j] * (j - hist.mean) * (j - hist.mean);
+    }
+    hist.standardDeviation = sum ? round(sqrt(stCount / double(sum))) : 0;
+}
+
+static std::array<struct Histogram, 3> statiticsRGB(const QImage& image) {
+    std::array<struct Histogram, 3> result;
+    for (unsigned i = 0; i < 3; i++) {
+        result[i].value.resize(256);
+        result[i].value.fill(0);
+        result[i].mean = 0;
+        result[i].median = 0;
+        result[i].mode = 0;
+        result[i].min = 0;
+        result[i].max = 0;
+        result[i].median = 0;
+        result[i].lowerQuartile = 0;
+        result[i].upperQuartile = 0;
+        result[i].mode = 0;
+    }
+
+    if (image.isNull()) {
+        return result;
+    }
+
+    for(int y = 0; y < image.height(); y++) {
+        for(int x = 0; x < image.width(); x++) {
+            auto pix = image.pixel(x, y);
+            result[0].value[qRed(pix)] += 1;
+            result[1].value[qGreen(pix)] += 1;
+            result[2].value[qBlue(pix)] += 1;
+        }
+    }
+
+    for (unsigned i = 0; i < 3; i++) {
+        statistics(result[i], image.width() * image.height());
+    }
+
+    return result;
+}
+
+static std::array<struct Histogram, 3> statiticsLAB(const QImage& image) {
+    std::array<struct Histogram, 3> result;
+    result[0].value.resize(101);
+    result[0].mean = 0;
+    result[0].median = 0;
+    result[0].mode = 0;
+    result[0].min = 0;
+    result[0].max = 0;
+    result[0].median = 0;
+    result[0].lowerQuartile = 0;
+    result[0].upperQuartile = 0;
+    for (unsigned i = 1; i < 3; i++) {
+        result[i].value.resize(256);
+        result[i].mean = 0;
+        result[i].median = 0;
+        result[i].mode = 0;
+        result[i].min = 0;
+        result[i].max = 0;
+        result[i].median = 0;
+        result[i].lowerQuartile = 0;
+        result[i].upperQuartile = 0;
+    }
+
+    for(int y = 0; y < image.height(); y++) {
+        for(int x = 0; x < image.width(); x++) {
+            auto pix = image.pixel(x, y);
+            result[0].value[toL(pix)] += 1;
+            result[1].value[toA(pix)] += 1;
+            result[2].value[toB(pix)] += 1;
+        }
+    }
+
+    for (unsigned i = 0; i < 3; i++) {
+        statistics(result[i], image.width() * image.height());
+    }
+
+    return result;
+}
+
+static std::array<struct Histogram, 3> statiticsYUV(const QImage& image) {
+    std::array<struct Histogram, 3> result;
+    for (unsigned i = 0; i < 3; i++) {
+        result[i].value.resize(256);
+        result[i].value.fill(0);
+        result[i].mean = 0;
+        result[i].median = 0;
+        result[i].mode = 0;
+        result[i].min = 0;
+        result[i].max = 0;
+        result[i].median = 0;
+        result[i].lowerQuartile = 0;
+        result[i].upperQuartile = 0;
+    }
+
+    for(int y = 0; y < image.height(); y++) {
+        for(int x = 0; x < image.width(); x++) {
+            auto pix = image.pixel(x, y);
+            result[0].value[toY(pix)] += 1;
+            result[1].value[toU(pix)] += 1;
+            result[2].value[toV(pix)] += 1;
+        }
+    }
+
+    for (unsigned i = 0; i < 3; i++) {
+        statistics(result[i], image.width() * image.height());
+    }
+
+    return result;
 }
 
 void OpenMVPluginHistogram::updatePlot(QCPGraph *graph, int channel)
@@ -482,6 +641,8 @@ OpenMVPluginHistogram::OpenMVPluginHistogram(QWidget *parent) : QWidget(parent),
                   arg(Utils::creatorTheme()->color(Utils::Theme::TextColorNormal).name()));
 
     colorSpaceChanged(m_colorSpace);
+
+
 }
 
 OpenMVPluginHistogram::~OpenMVPluginHistogram()
@@ -571,10 +732,83 @@ void OpenMVPluginHistogram::colorSpaceChanged(int colorSpace)
 {
     m_colorSpace = colorSpace;
 
+    update();
+}
+
+void OpenMVPluginHistogram::update()
+{
     switch(m_colorSpace)
     {
+        case NONE_COLOR_SPACE:
+            break;
         case RGB_COLOR_SPACE:
         {
+#define USE_STATISTICS 0
+#if USE_STATISTICS
+            auto hists = statiticsRGB(m_pixmap.toImage());
+            m_ui->C0MeanValue->setNum(hists[0].mean);
+            m_ui->C0MedianValue->setNum(hists[0].median);
+            m_ui->C0ModeValue->setNum(hists[0].mode);
+            m_ui->C0StDevValue->setNum(hists[0].standardDeviation);
+            m_ui->C0MinValue->setNum(hists[0].min);
+            m_ui->C0MaxValue->setNum(hists[0].max);
+            m_ui->C0LQValue->setNum(hists[0].lowerQuartile);
+            m_ui->C0UQValue->setNum(hists[0].upperQuartile);
+            m_channel0->setPen(QPen(QBrush(QColor(255, 0, 0)), 0, Qt::SolidLine));
+            m_channel0->setBrush(QBrush(QColor(255, 200, 200), Qt::SolidPattern));
+            m_ui->C0Plot->rescaleAxes();
+            m_ui->C0Plot->yAxis->setLabel(Tr::tr("R"));
+            m_ui->C0Plot->yAxis->setRange(0, 1);
+            m_ui->C0Plot->replot();
+            m_channel0->clearData();
+            if (hists[0].value[hists[0].mode]) {
+                for (unsigned i = 0; i < hists[0].value.size(); i++) {
+                    m_channel0->addData(i, hists[0].mode ? hists[0].value[i] / double(hists[0].value[hists[0].mode]) : 0);
+                }
+            }
+
+            m_ui->C1MeanValue->setNum(hists[1].mean);
+            m_ui->C1MedianValue->setNum(hists[1].median);
+            m_ui->C1ModeValue->setNum(hists[1].mode);
+            m_ui->C1StDevValue->setNum(hists[1].standardDeviation);
+            m_ui->C1MinValue->setNum(hists[1].min);
+            m_ui->C1MaxValue->setNum(hists[1].max);
+            m_ui->C1LQValue->setNum(hists[1].lowerQuartile);
+            m_ui->C1UQValue->setNum(hists[1].upperQuartile);
+            m_channel1->setPen(QPen(QBrush(QColor(0, 255, 0)), 0, Qt::SolidLine));
+            m_channel1->setBrush(QBrush(QColor(200, 255, 200), Qt::SolidPattern));
+            m_ui->C1Plot->rescaleAxes();
+            m_ui->C1Plot->yAxis->setLabel(Tr::tr("G"));
+            m_ui->C1Plot->yAxis->setRange(0, 1);
+            m_ui->C1Plot->replot();
+            m_channel1->clearData();
+            if (hists[1].value[hists[1].mode]) {
+                for (unsigned i = 0; i < hists[1].value.size(); i++) {
+                    m_channel1->addData(i, hists[1].value[i] / double(hists[1].value[hists[1].mode]));
+                }
+            }
+
+            m_ui->C2MeanValue->setNum(hists[2].mean);
+            m_ui->C2MedianValue->setNum(hists[2].median);
+            m_ui->C2ModeValue->setNum(hists[2].mode);
+            m_ui->C2StDevValue->setNum(hists[2].standardDeviation);
+            m_ui->C2MinValue->setNum(hists[2].min);
+            m_ui->C2MaxValue->setNum(hists[2].max);
+            m_ui->C2LQValue->setNum(hists[2].lowerQuartile);
+            m_ui->C2UQValue->setNum(hists[2].upperQuartile);
+            m_channel2->setPen(QPen(QBrush(QColor(0, 0, 255)), 0, Qt::SolidLine));
+            m_channel2->setBrush(QBrush(QColor(200, 200, 255), Qt::SolidPattern));
+            m_ui->C2Plot->rescaleAxes();
+            m_ui->C2Plot->yAxis->setLabel(Tr::tr("B"));
+            m_ui->C2Plot->yAxis->setRange(0, 1);
+            m_ui->C2Plot->replot();
+            m_channel2->clearData();
+            if (hists[2].value[hists[2].mode]) {
+                for (unsigned i = 0; i < hists[2].value.size(); i++) {
+                    m_channel2->addData(i, hists[2].value[i] / double(hists[2].value[hists[2].mode]));
+                }
+            }
+#else
             updatePlot(m_channel0, RGB_COLOR_SPACE_R);
             m_ui->C0MeanValue->setNum(m_mean);
             m_ui->C0MedianValue->setNum(m_median);
@@ -590,6 +824,7 @@ void OpenMVPluginHistogram::colorSpaceChanged(int colorSpace)
             m_ui->C0Plot->yAxis->setLabel(Tr::tr("R"));
             m_ui->C0Plot->yAxis->setRange(0, 1);
             m_ui->C0Plot->replot();
+            m_channel0->clearData();
 
             updatePlot(m_channel1, RGB_COLOR_SPACE_G);
             m_ui->C1MeanValue->setNum(m_mean);
@@ -606,6 +841,7 @@ void OpenMVPluginHistogram::colorSpaceChanged(int colorSpace)
             m_ui->C1Plot->yAxis->setLabel(Tr::tr("G"));
             m_ui->C1Plot->yAxis->setRange(0, 1);
             m_ui->C1Plot->replot();
+            m_channel1->clearData();
 
             updatePlot(m_channel2, RGB_COLOR_SPACE_B);
             m_ui->C2MeanValue->setNum(m_mean);
@@ -622,11 +858,8 @@ void OpenMVPluginHistogram::colorSpaceChanged(int colorSpace)
             m_ui->C2Plot->yAxis->setLabel(Tr::tr("B"));
             m_ui->C2Plot->yAxis->setRange(0, 1);
             m_ui->C2Plot->replot();
-
-            m_ui->C1Plot->show();
-            m_ui->C1Stats->show();
-            m_ui->C2Plot->show();
-            m_ui->C2Stats->show();
+            m_channel2->clearData();
+#endif
 
             break;
         }
@@ -647,11 +880,6 @@ void OpenMVPluginHistogram::colorSpaceChanged(int colorSpace)
             m_ui->C0Plot->yAxis->setLabel(Tr::tr("Y"));
             m_ui->C0Plot->yAxis->setRange(0, 1);
             m_ui->C0Plot->replot();
-
-            m_ui->C1Plot->hide();
-            m_ui->C1Stats->hide();
-            m_ui->C2Plot->hide();
-            m_ui->C2Stats->hide();
 
             break;
         }
@@ -705,11 +933,6 @@ void OpenMVPluginHistogram::colorSpaceChanged(int colorSpace)
             m_ui->C2Plot->yAxis->setRange(0, 1);
             m_ui->C2Plot->replot();
 
-            m_ui->C1Plot->show();
-            m_ui->C1Stats->show();
-            m_ui->C2Plot->show();
-            m_ui->C2Stats->show();
-
             break;
         }
         case YUV_COLOR_SPACE:
@@ -761,11 +984,6 @@ void OpenMVPluginHistogram::colorSpaceChanged(int colorSpace)
             m_ui->C2Plot->yAxis->setLabel(Tr::tr("V"));
             m_ui->C2Plot->yAxis->setRange(0, 1);
             m_ui->C2Plot->replot();
-
-            m_ui->C1Plot->show();
-            m_ui->C1Stats->show();
-            m_ui->C2Plot->show();
-            m_ui->C2Stats->show();
 
             break;
         }
@@ -775,186 +993,8 @@ void OpenMVPluginHistogram::colorSpaceChanged(int colorSpace)
 void OpenMVPluginHistogram::pixmapUpdate(const QPixmap &data)
 {
     m_pixmap = data;
-
-    switch(m_colorSpace)
-    {
-        case RGB_COLOR_SPACE:
-        {
-            updatePlot(m_channel0, RGB_COLOR_SPACE_R);
-            m_ui->C0MeanValue->setNum(m_mean);
-            m_ui->C0MedianValue->setNum(m_median);
-            m_ui->C0ModeValue->setNum(m_mode);
-            m_ui->C0StDevValue->setNum(m_standardDeviation);
-            m_ui->C0MinValue->setNum(m_min);
-            m_ui->C0MaxValue->setNum(m_max);
-            m_ui->C0LQValue->setNum(m_lowerQuartile);
-            m_ui->C0UQValue->setNum(m_upperQuartile);
-            m_channel0->setPen(QPen(QBrush(QColor(255, 0, 0)), 0, Qt::SolidLine));
-            m_channel0->setBrush(QBrush(QColor(255, 200, 200), Qt::SolidPattern));
-            m_ui->C0Plot->rescaleAxes();
-            m_ui->C0Plot->yAxis->setLabel(Tr::tr("R"));
-            m_ui->C0Plot->yAxis->setRange(0, 1);
-            m_ui->C0Plot->replot();
-
-            updatePlot(m_channel1, RGB_COLOR_SPACE_G);
-            m_ui->C1MeanValue->setNum(m_mean);
-            m_ui->C1MedianValue->setNum(m_median);
-            m_ui->C1ModeValue->setNum(m_mode);
-            m_ui->C1StDevValue->setNum(m_standardDeviation);
-            m_ui->C1MinValue->setNum(m_min);
-            m_ui->C1MaxValue->setNum(m_max);
-            m_ui->C1LQValue->setNum(m_lowerQuartile);
-            m_ui->C1UQValue->setNum(m_upperQuartile);
-            m_channel1->setPen(QPen(QBrush(QColor(0, 255, 0)), 0, Qt::SolidLine));
-            m_channel1->setBrush(QBrush(QColor(200, 255, 200), Qt::SolidPattern));
-            m_ui->C1Plot->rescaleAxes();
-            m_ui->C1Plot->yAxis->setLabel(Tr::tr("G"));
-            m_ui->C1Plot->yAxis->setRange(0, 1);
-            m_ui->C1Plot->replot();
-
-            updatePlot(m_channel2, RGB_COLOR_SPACE_B);
-            m_ui->C2MeanValue->setNum(m_mean);
-            m_ui->C2MedianValue->setNum(m_median);
-            m_ui->C2ModeValue->setNum(m_mode);
-            m_ui->C2StDevValue->setNum(m_standardDeviation);
-            m_ui->C2MinValue->setNum(m_min);
-            m_ui->C2MaxValue->setNum(m_max);
-            m_ui->C2LQValue->setNum(m_lowerQuartile);
-            m_ui->C2UQValue->setNum(m_upperQuartile);
-            m_channel2->setPen(QPen(QBrush(QColor(0, 0, 255)), 0, Qt::SolidLine));
-            m_channel2->setBrush(QBrush(QColor(200, 200, 255), Qt::SolidPattern));
-            m_ui->C2Plot->rescaleAxes();
-            m_ui->C2Plot->yAxis->setLabel(Tr::tr("B"));
-            m_ui->C2Plot->yAxis->setRange(0, 1);
-            m_ui->C2Plot->replot();
-
-            break;
-        }
-        case GRAYSCALE_COLOR_SPACE:
-        {
-            updatePlot(m_channel0, GRAYSCALE_COLOR_SPACE_Y);
-            m_ui->C0MeanValue->setNum(m_mean);
-            m_ui->C0MedianValue->setNum(m_median);
-            m_ui->C0ModeValue->setNum(m_mode);
-            m_ui->C0StDevValue->setNum(m_standardDeviation);
-            m_ui->C0MinValue->setNum(m_min);
-            m_ui->C0MaxValue->setNum(m_max);
-            m_ui->C0LQValue->setNum(m_lowerQuartile);
-            m_ui->C0UQValue->setNum(m_upperQuartile);
-            m_channel0->setPen(QPen(QBrush(QColor(143, 143, 143)), 0, Qt::SolidLine));
-            m_channel0->setBrush(QBrush(QColor(200, 200, 200), Qt::SolidPattern));
-            m_ui->C0Plot->rescaleAxes();
-            m_ui->C0Plot->yAxis->setLabel(Tr::tr("Y"));
-            m_ui->C0Plot->yAxis->setRange(0, 1);
-            m_ui->C0Plot->replot();
-
-            break;
-        }
-        case LAB_COLOR_SPACE:
-        {
-            updatePlot(m_channel0, LAB_COLOR_SPACE_L);
-            m_ui->C0MeanValue->setNum(m_mean);
-            m_ui->C0MedianValue->setNum(m_median);
-            m_ui->C0ModeValue->setNum(m_mode);
-            m_ui->C0StDevValue->setNum(m_standardDeviation);
-            m_ui->C0MinValue->setNum(m_min);
-            m_ui->C0MaxValue->setNum(m_max);
-            m_ui->C0LQValue->setNum(m_lowerQuartile);
-            m_ui->C0UQValue->setNum(m_upperQuartile);
-            m_channel0->setPen(QPen(QBrush(QColor(143, 143, 143)), 0, Qt::SolidLine));
-            m_channel0->setBrush(QBrush(QColor(200, 200, 200), Qt::SolidPattern));
-            m_ui->C0Plot->rescaleAxes();
-            m_ui->C0Plot->yAxis->setLabel(Tr::tr("L"));
-            m_ui->C0Plot->yAxis->setRange(0, 1);
-            m_ui->C0Plot->replot();
-
-            updatePlot(m_channel1, LAB_COLOR_SPACE_A);
-            m_ui->C1MeanValue->setNum(m_mean);
-            m_ui->C1MedianValue->setNum(m_median);
-            m_ui->C1ModeValue->setNum(m_mode);
-            m_ui->C1StDevValue->setNum(m_standardDeviation);
-            m_ui->C1MinValue->setNum(m_min);
-            m_ui->C1MaxValue->setNum(m_max);
-            m_ui->C1LQValue->setNum(m_lowerQuartile);
-            m_ui->C1UQValue->setNum(m_upperQuartile);
-            m_channel1->setPen(QPen(QBrush(QColor(204, 255, 0)), 0, Qt::SolidLine));
-            m_channel1->setBrush(QBrush(QColor(244, 255, 200), Qt::SolidPattern));
-            m_ui->C1Plot->rescaleAxes();
-            m_ui->C1Plot->yAxis->setLabel(Tr::tr("A"));
-            m_ui->C1Plot->yAxis->setRange(0, 1);
-            m_ui->C1Plot->replot();
-
-            updatePlot(m_channel2, LAB_COLOR_SPACE_B);
-            m_ui->C2MeanValue->setNum(m_mean);
-            m_ui->C2MedianValue->setNum(m_median);
-            m_ui->C2ModeValue->setNum(m_mode);
-            m_ui->C2StDevValue->setNum(m_standardDeviation);
-            m_ui->C2MinValue->setNum(m_min);
-            m_ui->C2MaxValue->setNum(m_max);
-            m_ui->C2LQValue->setNum(m_lowerQuartile);
-            m_ui->C2UQValue->setNum(m_upperQuartile);
-            m_channel2->setPen(QPen(QBrush(QColor(0, 102, 255)), 0, Qt::SolidLine));
-            m_channel2->setBrush(QBrush(QColor(200, 222, 255), Qt::SolidPattern));
-            m_ui->C2Plot->rescaleAxes();
-            m_ui->C2Plot->yAxis->setLabel(Tr::tr("B"));
-            m_ui->C2Plot->yAxis->setRange(0, 1);
-            m_ui->C2Plot->replot();
-
-            break;
-        }
-        case YUV_COLOR_SPACE:
-        {
-            updatePlot(m_channel0, YUV_COLOR_SPACE_Y);
-            m_ui->C0MeanValue->setNum(m_mean);
-            m_ui->C0MedianValue->setNum(m_median);
-            m_ui->C0ModeValue->setNum(m_mode);
-            m_ui->C0StDevValue->setNum(m_standardDeviation);
-            m_ui->C0MinValue->setNum(m_min);
-            m_ui->C0MaxValue->setNum(m_max);
-            m_ui->C0LQValue->setNum(m_lowerQuartile);
-            m_ui->C0UQValue->setNum(m_upperQuartile);
-            m_channel0->setPen(QPen(QBrush(QColor(143, 143, 143)), 0, Qt::SolidLine));
-            m_channel0->setBrush(QBrush(QColor(200, 200, 200), Qt::SolidPattern));
-            m_ui->C0Plot->rescaleAxes();
-            m_ui->C0Plot->yAxis->setLabel(Tr::tr("Y"));
-            m_ui->C0Plot->yAxis->setRange(0, 1);
-            m_ui->C0Plot->replot();
-
-            updatePlot(m_channel1, YUV_COLOR_SPACE_U);
-            m_ui->C1MeanValue->setNum(m_mean);
-            m_ui->C1MedianValue->setNum(m_median);
-            m_ui->C1ModeValue->setNum(m_mode);
-            m_ui->C1StDevValue->setNum(m_standardDeviation);
-            m_ui->C1MinValue->setNum(m_min);
-            m_ui->C1MaxValue->setNum(m_max);
-            m_ui->C1LQValue->setNum(m_lowerQuartile);
-            m_ui->C1UQValue->setNum(m_upperQuartile);
-            m_channel1->setPen(QPen(QBrush(QColor(0, 255, 102)), 0, Qt::SolidLine));
-            m_channel1->setBrush(QBrush(QColor(200, 255, 222), Qt::SolidPattern));
-            m_ui->C1Plot->rescaleAxes();
-            m_ui->C1Plot->yAxis->setLabel(Tr::tr("U"));
-            m_ui->C1Plot->yAxis->setRange(0, 1);
-            m_ui->C1Plot->replot();
-
-            updatePlot(m_channel2, YUV_COLOR_SPACE_V);
-            m_ui->C2MeanValue->setNum(m_mean);
-            m_ui->C2MedianValue->setNum(m_median);
-            m_ui->C2ModeValue->setNum(m_mode);
-            m_ui->C2StDevValue->setNum(m_standardDeviation);
-            m_ui->C2MinValue->setNum(m_min);
-            m_ui->C2MaxValue->setNum(m_max);
-            m_ui->C2LQValue->setNum(m_lowerQuartile);
-            m_ui->C2UQValue->setNum(m_upperQuartile);
-            m_channel2->setPen(QPen(QBrush(QColor(204, 0, 255)), 0, Qt::SolidLine));
-            m_channel2->setBrush(QBrush(QColor(244, 200, 255), Qt::SolidPattern));
-            m_ui->C2Plot->rescaleAxes();
-            m_ui->C2Plot->yAxis->setLabel(Tr::tr("V"));
-            m_ui->C2Plot->yAxis->setRange(0, 1);
-            m_ui->C2Plot->replot();
-
-            break;
-        }
-    }
+    // TODO: to another thread
+    update();
 }
 
 } // namespace Internal

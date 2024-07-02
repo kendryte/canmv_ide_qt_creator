@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <Installer>
-    <Name>CanMV IDE 4</Name>
+    <Name>CanMV IDE K230</Name>
     <Version>{version}</Version>
-    <Title>CanMV IDE 4</Title>
+    <Title>CanMV IDE K230</Title>
     <Publisher>Canaan Inc.</Publisher>
     <ProductUrl>https://www.canaan.io</ProductUrl>
 
     <MaintenanceToolName>CanMVIDEUninst</MaintenanceToolName>
-    <TargetDir>@ApplicationsDir@/CanMV IDE 4</TargetDir>
-    <StartMenuDir>CanMV IDE 4</StartMenuDir>
+    <TargetDir>@ApplicationsDir@/CanMV IDE K230</TargetDir>
+    <StartMenuDir>CanMV IDE K230</StartMenuDir>
     <ControlScript>controlscript.qs</ControlScript>
 </Installer>

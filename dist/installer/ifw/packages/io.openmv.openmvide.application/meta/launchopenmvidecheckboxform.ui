@@ -17,7 +17,7 @@
    <item>
     <widget class="QCheckBox" name="launchQtCreatorCheckBox">
      <property name="text">
-      <string>Launch CanMV IDE</string>
+      <string>Launch CanMV IDE K230</string>
      </property>
      <property name="checked">
       <bool>true</bool>

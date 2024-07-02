@@ -11,6 +11,7 @@
 #define GRAYSCALE_COLOR_SPACE 1
 #define LAB_COLOR_SPACE 2
 #define YUV_COLOR_SPACE 3
+#define NONE_COLOR_SPACE 4
 
 namespace Ui
 {
@@ -41,6 +42,7 @@ protected:
 private:
 
     void updatePlot(QCPGraph *graph, int channel);
+    void update();
 
     int m_colorSpace;
     QPixmap m_pixmap;

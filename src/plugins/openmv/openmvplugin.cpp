@@ -1847,6 +1847,7 @@ void OpenMVPlugin::extensionsInitialized()
     connect(aboutAction, &QAction::triggered, this, [] {
         QMessageBox::about(Core::ICore::dialogParent(), Tr::tr("About CanMV IDE K230"), Tr::tr(
         "<p><b>About CanMV IDE K230 %L1-%L4</b></p>"
+        "<img src=\":/openmv/media/splash/splash/splash.png\">"
         "<p>By: Canaan Inc.</p>"
         "<p>Based on OpenMV IDE By Ibrahim Abdelkader & Kwabena W. Agyeman</p>"
         "<p><b>GNU GENERAL PUBLIC LICENSE</b></p>"
@@ -2378,34 +2379,19 @@ void OpenMVPlugin::extensionsInitialized()
     Core::ICore::statusBar()->addPermanentWidget(m_boardLabel);
     Core::ICore::statusBar()->addPermanentWidget(new QLabel());
 
-    m_sensorLabel = new Utils::ElidingLabel(Tr::tr("Sensor:"));
-    m_sensorLabel->setToolTip(Tr::tr("Camera sensor module"));
-    m_sensorLabel->setDisabled(true);
-    Core::ICore::statusBar()->addPermanentWidget(m_sensorLabel);
-    Core::ICore::statusBar()->addPermanentWidget(new QLabel());
-
     m_versionButton = new Utils::ElidingToolButton;
     m_versionButton->setText(Tr::tr("Firmware Version:"));
     m_versionButton->setToolTip(Tr::tr("Camera firmware version"));
     m_versionButton->setDisabled(true);
     Core::ICore::statusBar()->addPermanentWidget(m_versionButton);
     Core::ICore::statusBar()->addPermanentWidget(new QLabel());
-    connect(m_versionButton, &QToolButton::clicked, this, &OpenMVPlugin::updateCam);
-
+    // connect(m_versionButton, &QToolButton::clicked, this, &OpenMVPlugin::updateCam);
 
     m_portLabel = new Utils::ElidingLabel(Tr::tr("Serial Port:"));
     m_portLabel->setToolTip(Tr::tr("Camera serial port"));
     m_portLabel->setDisabled(true);
     Core::ICore::statusBar()->addPermanentWidget(m_portLabel);
     Core::ICore::statusBar()->addPermanentWidget(new QLabel());
-
-    m_pathButton = new Utils::ElidingToolButton;
-    m_pathButton->setText(Tr::tr("Drive:"));
-    m_pathButton->setToolTip(Tr::tr("Drive associated with port"));
-    m_pathButton->setDisabled(true);
-    Core::ICore::statusBar()->addPermanentWidget(m_pathButton);
-    Core::ICore::statusBar()->addPermanentWidget(new QLabel());
-    connect(m_pathButton, &QToolButton::clicked, this, &OpenMVPlugin::setPortPath);
 
     m_fpsLabel = new Utils::ElidingLabel(Tr::tr("FPS:"));
     m_fpsLabel->setToolTip(Tr::tr("May be different from camera FPS"));
@@ -4116,8 +4102,6 @@ void OpenMVPlugin::setPortPath(bool silent)
         }
 
         settings->endGroup();
-
-        m_pathButton->setText((!m_portPath.isEmpty()) ? Tr::tr("Drive: %L1").arg(m_portPath) : Tr::tr("Drive:"));
 
         Core::IEditor *editor = Core::EditorManager::currentEditor();
         m_saveAction->setEnabled(editor ? (editor->document() ? (!editor->document()->contents().isEmpty()) : false) : false);

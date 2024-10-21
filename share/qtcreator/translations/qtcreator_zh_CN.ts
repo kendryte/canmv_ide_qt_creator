@@ -6652,7 +6652,7 @@ Please close any programs that are viewing/editing OpenMV IDE&apos;s application
         <location line="+65"/>
         <location filename="../../../src/plugins/openmv/openmvpluginconnect.cpp" line="-377"/>
         <source>Board:</source>
-        <translation>板:</translation>
+        <translation>开发板:</translation>
     </message>
     <message>
         <location line="+1"/>

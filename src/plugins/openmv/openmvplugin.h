@@ -420,10 +420,8 @@ private:
     OpenMVPluginHistogram *m_histogram;
 
     Utils::ElidingLabel *m_boardLabel;
-    Utils::ElidingLabel *m_sensorLabel;
     Utils::ElidingToolButton *m_versionButton;
     Utils::ElidingLabel *m_portLabel;
-    Utils::ElidingToolButton *m_pathButton;
     Utils::ElidingLabel  *m_fpsLabel;
 
     ///////////////////////////////////////////////////////////////////////////

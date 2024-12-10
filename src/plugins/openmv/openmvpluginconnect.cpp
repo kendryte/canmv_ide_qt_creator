@@ -114,7 +114,7 @@ void OpenMVPlugin::packageUpdate()
                                 {
                                     QMessageBox::critical(Core::ICore::dialogParent(),
                                         QString(),
-                                        error + Tr::tr("\n\nPlease close any programs that are viewing/editing OpenMV IDE's application data and then restart CanMV IDE!"));
+                                        error + Tr::tr("\n\nPlease close any programs that are viewing/editing CanMV IDE's application data and then restart CanMV IDE!"));
 
                                     QApplication::quit();
                                     ok = false;
@@ -125,7 +125,7 @@ void OpenMVPlugin::packageUpdate()
                                     {
                                         QMessageBox::critical(Core::ICore::dialogParent(),
                                             QString(),
-                                            Tr::tr("Please close any programs that are viewing/editing OpenMV IDE's application data and then restart CanMV IDE!"));
+                                            Tr::tr("Please close any programs that are viewing/editing CanMV IDE's application data and then restart CanMV IDE!"));
 
                                         QApplication::quit();
                                         ok = false;
@@ -141,7 +141,7 @@ void OpenMVPlugin::packageUpdate()
 
                                     QMessageBox::information(Core::ICore::dialogParent(),
                                         QString(),
-                                        Tr::tr("Installation Sucessful! Please restart OpenMV IDE."));
+                                        Tr::tr("Installation Sucessful! Please restart CanMV IDE."));
 
                                     Core::ICore::restart();
                                 }
@@ -3229,9 +3229,9 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
 
         QString boardTypeLabel = Tr::tr("Unknown");
 
-        if(((major2 > OLD_API_MAJOR)
+        /*if(((major2 > OLD_API_MAJOR)
         || ((major2 == OLD_API_MAJOR) && (minor2 > OLD_API_MINOR))
-        || ((major2 == OLD_API_MAJOR) && (minor2 == OLD_API_MINOR) && (patch2 >= OLD_API_PATCH))))
+        || ((major2 == OLD_API_MAJOR) && (minor2 == OLD_API_MINOR) && (patch2 >= OLD_API_PATCH)))) */
         {
             QString arch2 = QString();
             QString *arch2Ptr = &arch2;
@@ -3502,14 +3502,10 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
 
         m_boardLabel->setEnabled(true);
         m_boardLabel->setText(Tr::tr("Board: %L1").arg(boardTypeLabel));
-        m_sensorLabel->setEnabled(true);
-        m_sensorLabel->setText(Tr::tr("Sensor: %L1").arg(m_sensorType));
         m_versionButton->setEnabled(true);
         m_versionButton->setText(Tr::tr("Firmware Version: %L1.%L2.%L3").arg(major2).arg(minor2).arg(patch2));
         m_portLabel->setEnabled(true);
         m_portLabel->setText(Tr::tr("Serial Port: %L1").arg(m_portName));
-        m_pathButton->setEnabled(true);
-        m_pathButton->setText(Tr::tr("Drive:"));
         m_fpsLabel->setEnabled(true);
         m_fpsLabel->setText(Tr::tr("FPS: 0"));
 
@@ -3763,14 +3759,10 @@ void OpenMVPlugin::disconnectClicked(bool reset)
 
             m_boardLabel->setDisabled(true);
             m_boardLabel->setText(Tr::tr("Board:"));
-            m_sensorLabel->setDisabled(true);
-            m_sensorLabel->setText(Tr::tr("Sensor:"));
             m_versionButton->setDisabled(true);
             m_versionButton->setText(Tr::tr("Firmware Version:"));
             m_portLabel->setDisabled(true);
             m_portLabel->setText(Tr::tr("Serial Port:"));
-            m_pathButton->setDisabled(true);
-            m_pathButton->setText(Tr::tr("Drive:"));
             m_fpsLabel->setDisabled(true);
             m_fpsLabel->setText(Tr::tr("FPS:"));
 
@@ -4007,6 +3999,7 @@ void OpenMVPlugin::stopClicked()
         ///////////////////////////////////////////////////////////////////////
 
         m_fpsLabel->setText(Tr::tr("FPS: 0"));
+        m_frameBuffer->rotation = 0;
 
         ///////////////////////////////////////////////////////////////////////
 

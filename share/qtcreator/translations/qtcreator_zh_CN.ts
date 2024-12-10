@@ -7541,8 +7541,8 @@ Would you like to register your OpenMV Cam now?</source>
     </message>
     <message>
         <location line="+16"/>
-        <source>Installation Sucessful! Please restart OpenMV IDE.</source>
-        <translation>安装成功！请重新启动OpenMV IDE。</translation>
+        <source>Installation Sucessful! Please restart CanMV IDE.</source>
+        <translation>安装成功！请重新启动CanMV IDE。</translation>
     </message>
     <message>
         <location line="+10"/>

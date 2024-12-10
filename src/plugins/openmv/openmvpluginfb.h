@@ -20,6 +20,7 @@ public:
     bool beginImageWriter();
     void endImageWriter();
     void enableInteraction(bool enable) { m_enableInteraction = enable; }
+    qreal rotation;
 
 public slots:
 
@@ -69,7 +70,6 @@ private:
     QElapsedTimer m_elaspedTimer;
     QQueue<qint64> m_previousElaspedTimers;
 
-    qreal rotation;
 };
 
 } // namespace Internal

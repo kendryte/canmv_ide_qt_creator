@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <Installer>
-    <Name>CanMV IDE</Name>
+    <Name>CanMV IDE K230</Name>
     <Version>{version}</Version>
-    <Title>CanMV IDE {display_version}</Title>
+    <Title>CanMV IDE K230 {display_version}</Title>
     <Publisher>Canaan Inc.</Publisher>
-    <ProductUrl>https://www.canaan.io</ProductUrl>
+    <ProductUrl>https://www.kendryte.com</ProductUrl>
 
     <MaintenanceToolName>CanMVIDEUninstaller</MaintenanceToolName>
     <TargetDir>@homeDir@/canmvide</TargetDir>

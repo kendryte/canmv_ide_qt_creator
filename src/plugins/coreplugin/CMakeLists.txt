@@ -203,7 +203,8 @@ if ((NOT WIN32) AND (NOT APPLE))
       # OPENMV-DIFF #
       # FILES ${IDE_LOGO_PATH}/images/logo/${size}/QtProject-qtcreator.png
       # OPENMV-DIFF #
-      FILES ${IDE_LOGO_PATH}/images/logo/${size}/OpenMV-openmvide.png
+      # FILES ${IDE_LOGO_PATH}/images/logo/${size}/OpenMV-openmvide.png
+      FILES ${IDE_LOGO_PATH}/images/logo/${size}/CanMV-canmvide.png
       # OPENMV-DIFF #
       DESTINATION share/icons/hicolor/${size}x${size}/apps
     )

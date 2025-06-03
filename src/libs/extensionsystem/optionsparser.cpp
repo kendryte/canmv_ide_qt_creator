@@ -103,10 +103,16 @@ bool OptionsParser::checkForTestOptions()
     if (m_currentArg == QLatin1String(TEST_OPTION)) {
         if (nextToken(RequiredToken)) {
             if (m_currentArg == QLatin1String("all")) {
-                m_pmPrivate->testSpecs
-                    = Utils::transform<std::vector>(m_pmPrivate->loadQueue(), [](PluginSpec *spec) {
-                          return PluginManagerPrivate::TestSpec(spec);
-                      });
+                auto transformed = Utils::transform(m_pmPrivate->loadQueue(), [](PluginSpec *spec) {
+                    return PluginManagerPrivate::TestSpec(spec);
+                });
+                m_pmPrivate->testSpecs = std::vector<PluginManagerPrivate::TestSpec>(
+                    transformed.begin(), transformed.end()
+                );
+                // m_pmPrivate->testSpecs
+                //     = Utils::transform<std::vector>(m_pmPrivate->loadQueue(), [](PluginSpec *spec) {
+                //           return PluginManagerPrivate::TestSpec(spec);
+                //       });
             } else {
                 QStringList args = m_currentArg.split(QLatin1Char(','));
                 const QString pluginName = args.takeFirst();

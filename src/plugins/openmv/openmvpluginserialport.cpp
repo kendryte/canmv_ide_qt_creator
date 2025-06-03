@@ -16,7 +16,7 @@
 #define WRITE_TIMEOUT 6000
 #define SERIAL_READ_TIMEOUT 10000
 #define WIFI_READ_TIMEOUT 10000
-#define SERIAL_READ_STALL_TIMEOUT 2000
+#define SERIAL_READ_STALL_TIMEOUT 1000
 #define WIFI_READ_STALL_TIMEOUT 3000
 #define BOOTLOADER_WRITE_TIMEOUT 6
 #define BOOTLOADER_READ_TIMEOUT 10
@@ -558,6 +558,14 @@ void OpenMVPluginSerialPort_private::command(const OpenMVPluginSerialPortCommand
     }
     else if(m_port)
     {
+        static int frameDumpFailedCnt = 0;
+        bool isFrameDumpCommand = false;
+
+        if (command.m_data.size() >= 2)
+        {
+            isFrameDumpCommand = (static_cast<uint8_t>(command.m_data[1]) == __USBDBG_FRAME_DUMP);
+        }
+
         write(command.m_data, command.m_startWait, command.m_endWait, WRITE_TIMEOUT);
 
         if((!m_port) || (!command.m_responseLen))
@@ -583,95 +591,70 @@ void OpenMVPluginSerialPort_private::command(const OpenMVPluginSerialPortCommand
             QByteArray response;
             int responseLen = command.m_responseLen;
             QElapsedTimer elaspedTimer;
-            QElapsedTimer elaspedTimer2;
             elaspedTimer.start();
+
+            QElapsedTimer elaspedTimer2;
             elaspedTimer2.start();
-            static unsigned noResponseCount = 0;
+
+            bool readStallHappened = false;
 
             do
             {
-                m_port->waitForReadyRead(0);
+                QByteArray data;
 
-                QByteArray data = m_port->readAll();
-                response.append(data);
-
-                if((responseLen == command.m_responseLen) && (!data.isEmpty()))
+                if(true == m_port->waitForReadyRead(0))
                 {
-                    elaspedTimer.restart();
-                    elaspedTimer2.start();
-                }
+                    data = m_port->readAll();
+                    response.append(data);
 
-                if(m_port->isSerialPort() && (response.size() < responseLen) && elaspedTimer2.hasExpired(read_stall_timeout))
-                {
-                    // This code helps clear out read stalls where the OS received the data but then doesn't return it to the application.
-                    //
-                    // YES - THIS HAPPENS...
-
-                    if(command.m_perCommandWait) // normal mode
+                    if(!data.isEmpty())
                     {
-                        QByteArray data;
-                        serializeByte(data, __USBDBG_CMD);
-                        serializeByte(data, __USBDBG_SCRIPT_RUNNING);
-                        serializeLong(data, SCRIPT_RUNNING_RESPONSE_LEN);
-                        write(data, SCRIPT_RUNNING_START_DELAY, SCRIPT_RUNNING_END_DELAY, WRITE_TIMEOUT);
-
-                        if(m_port)
-                        {
-                            responseLen += SCRIPT_RUNNING_RESPONSE_LEN;
-                            elaspedTimer2.restart();
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                    else // bootloader mode
-                    {
-                        QByteArray data;
-                        serializeLong(data, __BOOTLDR_QUERY);
-                        write(data, BOOTLDR_QUERY_START_DELAY, BOOTLDR_QUERY_END_DELAY, WRITE_TIMEOUT);
-
-                        if(m_port)
-                        {
-                            responseLen += BOOTLDR_QUERY_RESPONSE_LEN;
-                            elaspedTimer2.restart();
-                        }
-                        else
-                        {
-                            break;
-                        }
+                        elaspedTimer.restart();
+                        elaspedTimer2.restart();
                     }
                 }
 
-                if(m_port->isTCPPort() && (response.size() < responseLen) && elaspedTimer2.hasExpired(read_stall_timeout))
+                if(response.size() < responseLen)
                 {
-                    write(command.m_data, 0, 0, WRITE_TIMEOUT);
-
-                    if(!m_port)
+                    if(isFrameDumpCommand && elaspedTimer2.hasExpired(200))
                     {
+                        readStallHappened = false;
+                        break;
+                    }
+
+                    if(elaspedTimer.hasExpired(read_stall_timeout) && command.m_commandAbortOkay)
+                    {
+                        readStallHappened = true;
                         break;
                     }
                 }
             }
             while((response.size() < responseLen) && (!elaspedTimer.hasExpired(read_timeout)));
 
-            if(response.size() >= responseLen)
+            if((response.size() >= responseLen) || readStallHappened)
             {
-                noResponseCount = 0;
+                if(isFrameDumpCommand)
+                {
+                    frameDumpFailedCnt = 0;
+                }
+
                 emit commandResult(OpenMVPluginSerialPortCommandResult(true, response.left(command.m_responseLen)));
             }
             else
             {
-                noResponseCount += 1;
-                qDebug() << "no response:" << noResponseCount;
-                if (noResponseCount > 20) {
-                    if(m_port) {
+                if(isFrameDumpCommand && (10 >= frameDumpFailedCnt))
+                {
+                    frameDumpFailedCnt++;
+                    emit commandResult(OpenMVPluginSerialPortCommandResult(true, QByteArray()));
+                }
+                else
+                {
+                    if(m_port)
+                    {
                         delete m_port;
                         m_port = Q_NULLPTR;
                     }
                     emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
-                } else {
-                    emit commandResult(OpenMVPluginSerialPortCommandResult(true, QByteArray()));
                 }
             }
         }

@@ -65,6 +65,16 @@ if(MSVC)
   add_compile_options(/wd4573)
 endif()
 
+if(MINGW)
+    add_compile_options(-Wa,-mbig-obj)
+endif()
+
+string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
+
+if(BUILD_TYPE_UPPER STREQUAL "DEBUG")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--subsystem,console")
+endif()
+
 find_package(Qt5
   ${IDE_QT_VERSION_MIN}
   COMPONENTS Concurrent Core Gui Network PrintSupport Qml Sql Widgets Xml Core5Compat ${QT_TEST_COMPONENT}

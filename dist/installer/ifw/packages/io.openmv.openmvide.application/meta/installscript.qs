@@ -39,7 +39,7 @@ Component.prototype.createOperationsForArchive = function(archive)
     if (systemInfo.productType !== "osx" || archive.indexOf('qtcreator.7z') !== -1)
         component.addOperation("Extract", archive, "@TargetDir@");
     else
-        component.addOperation("Extract", archive, "@TargetDir@/CanMV IDE.app/Contents");
+        component.addOperation("Extract", archive, "@TargetDir@/CanMV IDE K230.app/Contents");
 }
 
 Component.prototype.beginInstallation = function()
@@ -54,7 +54,7 @@ Component.prototype.beginInstallation = function()
         component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/bin/canmvide";
     }
     else if (installer.value("os") == "mac") {
-        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/CanMV IDE.app/Contents/MacOS/CanMV IDE";
+        component.qtCreatorBinaryPath = component.qtCreatorBinaryPath + "/CanMV IDE K230.app/Contents/MacOS/CanMV IDE K230";
     }
 
     if ( installer.value("os") === "win" )

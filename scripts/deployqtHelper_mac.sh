@@ -162,7 +162,7 @@ if [ ! -d "$app_path/Contents/Frameworks/QtCore.framework" ]; then
     #     "$qml2puppetArgument" || exit 1
     # OPENMV-DIFF #
     "$bin_src/macdeployqt" "$app_path" \
-            "-executable=$app_path/Contents/MacOS/OpenMV IDE" \
+            "-executable=$app_path/Contents/MacOS/CanMV IDE K230" \
             "-executable=$app_path/Contents/MacOS/qtdiag" || exit 1
     echo -e "[Paths]\nPlugins = PlugIns" > "$resource_path/qt.conf" || exit 1
     # OPENMV-DIFF #

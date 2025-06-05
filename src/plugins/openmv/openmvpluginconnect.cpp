@@ -166,7 +166,7 @@ void OpenMVPlugin::packageUpdate()
                             delete dialog;
                         });
 
-                        QNetworkRequest request2 = QNetworkRequest(QUrl(QStringLiteral("https://kendryte-download.canaan-creative.com/developer/k230/canmv-ide-resources/canmv-ide-resources-%1.%2.%3.zip").arg(new_major).arg(new_minor).arg(new_patch)));
+                        QNetworkRequest request2 = QNetworkRequest(QUrl(QStringLiteral("https://kendryte-download.canaan-creative.com/developer/tools/canmv_ide_k230/canmv_ide_resources/canmv-ide-resources-%1.%2.%3.zip").arg(new_major).arg(new_minor).arg(new_patch)));
                         QNetworkReply *reply2 = manager2->get(request2);
 
                         if(reply2)
@@ -194,7 +194,7 @@ void OpenMVPlugin::packageUpdate()
         connect(reply, &QNetworkReply::destroyed, manager, &QNetworkAccessManager::deleteLater); reply->deleteLater();
     });
 
-    QNetworkRequest request = QNetworkRequest(QUrl(QStringLiteral("https://kendryte-download.canaan-creative.com/developer/k230/canmv-ide-resources/version.txt")));
+    QNetworkRequest request = QNetworkRequest(QUrl(QStringLiteral("https://kendryte-download.canaan-creative.com/developer/tools/canmv_ide_k230/canmv_ide_resources/version.txt")));
     QNetworkReply *reply = manager->get(request);
 
     if(reply)

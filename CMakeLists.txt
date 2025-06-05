@@ -66,13 +66,15 @@ if(MSVC)
 endif()
 
 if(MINGW)
-    add_compile_options(-Wa,-mbig-obj)
+  add_compile_options(-Wa,-mbig-obj)
 endif()
 
-string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
+if(WIN32)
+  string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
 
-if(BUILD_TYPE_UPPER STREQUAL "DEBUG")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--subsystem,console")
+  if(BUILD_TYPE_UPPER STREQUAL "DEBUG")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--subsystem,console")
+  endif()
 endif()
 
 find_package(Qt5

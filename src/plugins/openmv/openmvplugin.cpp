@@ -1142,18 +1142,21 @@ void OpenMVPlugin::extensionsInitialized()
     examplesMenu->setOnAllDisabledBehavior(Core::ActionContainer::Show);
     connect(filesMenu->menu(), &QMenu::aboutToShow, this, [this, examplesMenu] {
         examplesMenu->menu()->clear();
-        QMultiMap<QString, QAction *> actions = aboutToShowExamplesRecursive(Core::ICore::userResourcePath(QStringLiteral("examples")).toString(), examplesMenu->menu());
+
         auto updateFromGithub = new QAction("Update from GitHub", examplesMenu->menu());
         connect(updateFromGithub, &QAction::triggered, this, [this] {
             qDebug() << "Update from GitHub";
             updateExamplesFromUrl(QUrl("https://github.com/kendryte/canmv_examples/archive/refs/heads/main.zip"));
         });
         // examplesMenu->menu()->addAction(updateFromGithub);
+
         auto updateFromGitee = new QAction("Update from Gitee", examplesMenu->menu());
         connect(updateFromGitee, &QAction::triggered, this, [] {
             qDebug() << "Update from Gitee";
         });
         // examplesMenu->menu()->addAction(updateFromGitee);
+
+        QMultiMap<QString, QAction *> actions = aboutToShowExamplesRecursive(Core::ICore::userResourcePath(QStringLiteral("examples")).toString(), examplesMenu->menu());
         examplesMenu->menu()->addActions(actions.values());
         examplesMenu->menu()->setDisabled(actions.values().isEmpty());
     });
@@ -1815,7 +1818,7 @@ void OpenMVPlugin::extensionsInitialized()
     Core::Command *docsCommand = Core::ActionManager::registerAction(docsAction, Utils::Id("OpenMV.Docs"));
     helpMenu->addAction(docsCommand, Core::Constants::G_HELP_SUPPORT);
     connect(docsAction, &QAction::triggered, this, [] {
-        QUrl url = QUrl(QStringLiteral("https://developer.canaan-creative.com/k230_canmv/dev/index.html"));
+        QUrl url = QUrl(QStringLiteral("https://www.kendryte.com/k230_canmv/main/index.html"));
 
         if(!QDesktopServices::openUrl(url))
         {
@@ -1829,7 +1832,7 @@ void OpenMVPlugin::extensionsInitialized()
     Core::Command *forumsCommand = Core::ActionManager::registerAction(forumsAction, Utils::Id("OpenMV.Forums"));
     helpMenu->addAction(forumsCommand, Core::Constants::G_HELP_SUPPORT);
     connect(forumsAction, &QAction::triggered, this, [] {
-        QUrl url = QUrl(QStringLiteral("https://developer.canaan-creative.com/home/0"));
+        QUrl url = QUrl(QStringLiteral("https://www.kendryte.com"));
 
         if(!QDesktopServices::openUrl(url))
         {

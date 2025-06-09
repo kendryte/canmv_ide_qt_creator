@@ -216,7 +216,7 @@ def add_qt_conf(target_path, qt_prefix_path):
 def copy_translations(install_dir, qt_tr_dir):
     translations = glob(os.path.join(qt_tr_dir, '*.qm'))
     # OPENMV-DIFF #
-    substrings = ['qt_', 'qtbase_', 'qtserialport_'] # add
+    substrings = ['qt_', 'qtbase_', 'qtserialport_', 'qtmultimedia_'] # add
     translations = list(filter(lambda x: any(s in x for s in substrings), translations))
     substrings = ['qt_help_'] # remove
     translations = list(filter(lambda x: not any(s in x for s in substrings), translations))

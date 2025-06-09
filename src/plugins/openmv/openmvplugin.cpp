@@ -1200,13 +1200,13 @@ void OpenMVPlugin::extensionsInitialized()
     m_stopOnConnectDiconnectionAction->setDisabled(m_disableStop);
 
     toolsMenu->addSeparator();
-    m_saveAction = new QAction(Tr::tr("Save open script to CanMV board (as main.py)"), this);
+    m_saveAction = new QAction(Tr::tr("Save open script to CanMV Board (as main.py)"), this);
     m_saveCommand = Core::ActionManager::registerAction(m_saveAction, Utils::Id("OpenMV.Save"));
     toolsMenu->addAction(m_saveCommand);
     m_saveAction->setEnabled(false);
     connect(m_saveAction, &QAction::triggered, this, &OpenMVPlugin::saveScript);
 
-    m_saveFileAction = new QAction(Tr::tr("Save file to CanMV board"), this);
+    m_saveFileAction = new QAction(Tr::tr("Save file to CanMV Board"), this);
     m_saveFileCommand = Core::ActionManager::registerAction(m_saveFileAction, Utils::Id("OpenMV.SaveFile"));
     toolsMenu->addAction(m_saveFileCommand);
     m_saveFileAction->setEnabled(false);
@@ -1215,7 +1215,7 @@ void OpenMVPlugin::extensionsInitialized()
         QDialog *dialog = new QDialog(Core::ICore::dialogParent(),
                                       Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
                                           (Utils::HostOsInfo::isMacHost() ? Qt::WindowType(0) : Qt::WindowCloseButtonHint));
-        dialog->setWindowTitle(Tr::tr("Save file to CanMV Cam"));
+        dialog->setWindowTitle(Tr::tr("Save file to CanMV Board"));
 
         QVBoxLayout *v_layout = new QVBoxLayout(dialog);
 

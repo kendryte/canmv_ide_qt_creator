@@ -96,6 +96,7 @@ if [ ! -f "$resource_path/translations/qt_de.qm" ]; then
     cp "$translation_src"/qt_*.qm "$resource_path/translations/" || exit 1
     cp "$translation_src"/qtbase_*.qm "$resource_path/translations/" || exit 1
     cp "$translation_src"/qtserialport_*.qm "$resource_path/translations/" || exit 1
+    cp "$translation_src"/qtmultimedia_*.qm "$resource_path/translations/" || exit 1
     rm "$resource_path"/translations/qt_help_*.qm || exit 1
     # OPENMV-DIFF #
 fi

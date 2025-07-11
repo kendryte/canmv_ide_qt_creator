@@ -312,6 +312,10 @@ private:
     bool m_bootloaderStop;
     int m_override_read_timeout;
     int m_override_read_stall_timeout;
+    int m_override_per_command_wait;
+
+    QHash<char, QQueue<qint64> > m_readstallQueue;
+    QHash<char, qint64 > m_readstallAverage;
 };
 
 class OpenMVPluginSerialPort : public QObject

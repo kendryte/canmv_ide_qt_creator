@@ -154,6 +154,8 @@
 #define OPEN_TERMINAL_COMMAND_STR "CommandStr"
 #define OPEN_TERMINAL_COMMAND_VAL "CommandVal"
 
+#define DISABLE_RESOURCE_UPDATER "DisableResourceUpdater"
+
 #define RECONNECTS_MAX 10
 #define OLD_API_MAJOR 1
 #define OLD_API_MINOR 7
@@ -394,6 +396,8 @@ private:
     QString m_portPath;
     QString m_formKey;
 
+    bool m_disable_source_updater;
+
     QString m_serialNumberFilter;
     QRegularExpression m_errorFilterRegex;
     QString m_errorFilterString;
@@ -404,6 +408,7 @@ private:
     QAction *m_stopOnConnectDiconnectionAction;
 
     Core::Command *m_saveCommand; QAction *m_saveAction;
+    Core::Command *m_disableSourceUpdaterCommand; QAction *m_disableSourceUpdaterAction;
     Core::Command *m_saveFileCommand; QAction *m_saveFileAction;
     Core::ActionContainer *m_openTerminalMenu;
     Core::Command *m_connectCommand; QAction *m_connectAction;

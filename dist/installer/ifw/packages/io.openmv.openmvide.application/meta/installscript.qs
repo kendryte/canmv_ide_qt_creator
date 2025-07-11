@@ -94,7 +94,7 @@ Component.prototype.createOperations = function()
                                 "@StartMenuDir@/Uninstall.lnk",
                                 "workingDirectory=@homeDir@" );
         // component.addElevatedOperation("Execute", "{1,256}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\pybcdc\\pybcdc.cmd");
-        component.addElevatedOperation("Execute", "{0,3010}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\vcr.cmd");
+        // component.addElevatedOperation("Execute", "{0,3010}", "cmd", "/c", "@TargetDir@\\share\\qtcreator\\drivers\\vcr.cmd");
     }
     if ( installer.value("os") == "x11" )
     {

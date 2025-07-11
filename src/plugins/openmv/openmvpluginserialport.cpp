@@ -14,7 +14,7 @@
 #define WRITE_LOOPS 1 // disabled
 #define WRITE_DELAY 0 // disabled
 #define WRITE_TIMEOUT 6000
-#define SERIAL_READ_TIMEOUT 10000
+#define SERIAL_READ_TIMEOUT 5000
 #define WIFI_READ_TIMEOUT 10000
 #define SERIAL_READ_STALL_TIMEOUT 1000
 #define WIFI_READ_STALL_TIMEOUT 3000
@@ -29,6 +29,10 @@
 
 #define READ_BUFFER_SIZE (64 * 1024 * 1024)
 #define WRITE_BUFFER_SIZE (64 * 1024 * 1024)
+
+#define DYNAMIC_READ_STALL_ENABLE 0
+#define DYNAMIC_READ_STALL_BUFFER_SIZE 20
+#define DYNAMIC_READ_STALL_THRESHOLD 10
 
 namespace OpenMV {
 namespace Internal {
@@ -343,10 +347,16 @@ OpenMVPluginSerialPort_private::OpenMVPluginSerialPort_private(int override_read
     m_bootloaderStop = false;
     m_override_read_timeout = override_read_timeout;
     m_override_read_stall_timeout = override_read_stall_timeout;
+
+    m_readstallQueue = QHash<char, QQueue<qint64> >();
+    m_readstallAverage = QHash<char, qint64 >();
 }
 
 void OpenMVPluginSerialPort_private::open(const QString &portName)
 {
+    m_readstallQueue = QHash<char, QQueue<qint64> >();
+    m_readstallAverage = QHash<char, qint64 >();
+
     if(m_port)
     {
         delete m_port;
@@ -491,19 +501,16 @@ void OpenMVPluginSerialPort_private::command(const OpenMVPluginSerialPortCommand
     {
         if(!command.m_responseLen) // close
         {
-            if(m_port)
-            {
+            if(m_port) {
                 delete m_port;
                 m_port = Q_NULLPTR;
             }
-
             emit commandResult(OpenMVPluginSerialPortCommandResult(true, QByteArray()));
         }
-        else if(m_port) // learn
+        else if (m_port) // learn
         {
             bool ok = false;
-
-            for(int i = LEARN_MTU_MAX; i >= LEARN_MTU_MIN; i /= 2)
+            for (int i = LEARN_MTU_MAX; i >= LEARN_MTU_MIN; i /= 2)
             {
                 QByteArray learnMTU;
                 serializeByte(learnMTU, __USBDBG_CMD);
@@ -511,43 +518,31 @@ void OpenMVPluginSerialPort_private::command(const OpenMVPluginSerialPortCommand
                 serializeLong(learnMTU, i - 1);
 
                 write(learnMTU, LEARN_MTU_START_DELAY, LEARN_MTU_END_DELAY, LEARN_MTU_WRITE_TIMEOUT);
+                if (!m_port) break;
 
-                if(!m_port)
-                {
+                QByteArray response;
+                QElapsedTimer timer;
+                timer.start();
+
+                do {
+                    m_port->waitForReadyRead(1);
+                    response.append(m_port->readAll());
+                } while (response.size() < (i - 1) && !timer.hasExpired(LEATN_MTU_READ_TIMEOUT));
+
+                if (response.size() >= (i - 1)) {
+                    QByteArray temp;
+                    serializeLong(temp, (i - 1));
+                    emit commandResult(OpenMVPluginSerialPortCommandResult(true, temp));
+                    ok = true;
                     break;
-                }
-                else
-                {
-                    QByteArray response;
-                    QElapsedTimer elaspedTimer;
-                    elaspedTimer.start();
-
-                    do
-                    {
-                        m_port->waitForReadyRead(1);
-                        response.append(m_port->readAll());
-                    }
-                    while((response.size() < (i - 1)) && (!elaspedTimer.hasExpired(LEATN_MTU_READ_TIMEOUT)));
-
-                    if(response.size() >= (i - 1))
-                    {
-                        QByteArray temp;
-                        serializeLong(temp, (i - 1));
-                        emit commandResult(OpenMVPluginSerialPortCommandResult(true, temp));
-                        ok = true;
-                        break;
-                    }
                 }
             }
 
-            if(!ok)
-            {
-                if(m_port)
-                {
+            if (!ok) {
+                if (m_port) {
                     delete m_port;
                     m_port = Q_NULLPTR;
                 }
-
                 emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
             }
         }
@@ -555,118 +550,126 @@ void OpenMVPluginSerialPort_private::command(const OpenMVPluginSerialPortCommand
         {
             emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
         }
+        return;
     }
-    else if(m_port)
+
+    if (!m_port) {
+        emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
+        return;
+    }
+
+    static int frameDumpFailedCnt = 0;
+    bool isFrameDumpCommand = false;
+
+    if (command.m_data.size() >= 2)
     {
-        static int frameDumpFailedCnt = 0;
-        bool isFrameDumpCommand = false;
+        isFrameDumpCommand = (static_cast<uint8_t>(command.m_data[1]) == __USBDBG_FRAME_DUMP);
+    }
 
-        if (command.m_data.size() >= 2)
-        {
-            isFrameDumpCommand = (static_cast<uint8_t>(command.m_data[1]) == __USBDBG_FRAME_DUMP);
+    write(command.m_data, command.m_startWait, command.m_endWait, WRITE_TIMEOUT);
+    if (!m_port || !command.m_responseLen) {
+        emit commandResult(OpenMVPluginSerialPortCommandResult(m_port, QByteArray()));
+        return;
+    }
+
+    int read_timeout = (m_override_read_timeout > 0) ?
+        m_override_read_timeout :
+        (m_port->isSerialPort() ? SERIAL_READ_TIMEOUT : WIFI_READ_TIMEOUT);
+
+    int read_stall_timeout = (m_override_read_stall_timeout > 0) ?
+        m_override_read_stall_timeout :
+        (m_port->isSerialPort() ? SERIAL_READ_STALL_TIMEOUT : WIFI_READ_STALL_TIMEOUT);
+
+    QByteArray response;
+    int responseLen = command.m_responseLen;
+
+    QElapsedTimer timer;
+    timer.start();
+#if DYNAMIC_READ_STALL_ENABLE
+    qint64 lastReadWait = 0;
+#endif
+    QElapsedTimer stallTimer;
+    stallTimer.start();
+
+    bool readStallHappened = false;
+
+    do
+    {
+        m_port->waitForReadyRead(0);  // always poll
+#if DYNAMIC_READ_STALL_ENABLE
+        lastReadWait = timer.elapsed();
+#endif
+        QByteArray data = m_port->readAll();
+        if (!data.isEmpty()) {
+            response.append(data);
+            timer.restart();  // reset timeout
+            stallTimer.restart();
         }
 
-        write(command.m_data, command.m_startWait, command.m_endWait, WRITE_TIMEOUT);
-
-        if((!m_port) || (!command.m_responseLen))
-        {
-            emit commandResult(OpenMVPluginSerialPortCommandResult(m_port, QByteArray()));
-        }
-        else
-        {
-            int read_timeout = m_port->isSerialPort() ? SERIAL_READ_TIMEOUT : WIFI_READ_TIMEOUT;
-
-            if(m_override_read_timeout > 0)
-            {
-                read_timeout = m_override_read_timeout;
-            }
-
-            int read_stall_timeout = m_port->isSerialPort() ? SERIAL_READ_STALL_TIMEOUT : WIFI_READ_STALL_TIMEOUT;
-
-            if(m_override_read_stall_timeout > 0)
-            {
-                read_stall_timeout = m_override_read_stall_timeout;
-            }
-
-            QByteArray response;
-            int responseLen = command.m_responseLen;
-            QElapsedTimer elaspedTimer;
-            elaspedTimer.start();
-
-            QElapsedTimer elaspedTimer2;
-            elaspedTimer2.start();
-
-            bool readStallHappened = false;
-
-            do
-            {
-                QByteArray data;
-
-                if(true == m_port->waitForReadyRead(0))
-                {
-                    data = m_port->readAll();
-                    response.append(data);
-
-                    if(!data.isEmpty())
-                    {
-                        elaspedTimer.restart();
-                        elaspedTimer2.restart();
-                    }
-                }
-
-                if(response.size() < responseLen)
-                {
-                    if(isFrameDumpCommand && elaspedTimer2.hasExpired(200))
-                    {
-                        readStallHappened = false;
-                        break;
-                    }
-
-                    if(elaspedTimer.hasExpired(read_stall_timeout) && command.m_commandAbortOkay)
-                    {
-                        readStallHappened = true;
-                        break;
-                    }
-                }
-            }
-            while((response.size() < responseLen) && (!elaspedTimer.hasExpired(read_timeout)));
-
-            if((response.size() >= responseLen) || readStallHappened)
-            {
-                if(isFrameDumpCommand)
-                {
-                    frameDumpFailedCnt = 0;
-                }
-
-                emit commandResult(OpenMVPluginSerialPortCommandResult(true, response.left(command.m_responseLen)));
-            }
-            else
-            {
-                if(isFrameDumpCommand && (10 >= frameDumpFailedCnt))
-                {
-                    frameDumpFailedCnt++;
-                    emit commandResult(OpenMVPluginSerialPortCommandResult(true, QByteArray()));
-                }
-                else
-                {
-                    if(m_port)
-                    {
-                        delete m_port;
-                        m_port = Q_NULLPTR;
-                    }
-                    emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
-                }
+#if DYNAMIC_READ_STALL_ENABLE
+        if ((m_override_read_stall_timeout <= 0) && command.m_commandAbortOkay) {
+            char cmd = command.m_data[1];
+            if ((m_readstallQueue[cmd].size() == DYNAMIC_READ_STALL_BUFFER_SIZE) &&
+                (lastReadWait > (m_readstallAverage[cmd] * DYNAMIC_READ_STALL_THRESHOLD))) {
+                readStallHappened = true;
+                break;
             }
         }
+#endif
+
+        if (response.size() < responseLen) {
+            if (isFrameDumpCommand && stallTimer.hasExpired(200)) {
+                readStallHappened = false;
+                break;
+            }
+
+            if (timer.hasExpired(read_stall_timeout) && command.m_commandAbortOkay) {
+                readStallHappened = true;
+                break;
+            }
+        }
+    }
+    while ((response.size() < responseLen) && (!timer.hasExpired(read_timeout)));
+
+#if DYNAMIC_READ_STALL_ENABLE
+    if (command.m_commandAbortOkay && !readStallHappened) {
+        char cmd = command.m_data[1];
+        m_readstallQueue[cmd].push_back(lastReadWait);
+        if (m_readstallQueue[cmd].size() > DYNAMIC_READ_STALL_BUFFER_SIZE) {
+            m_readstallQueue[cmd].pop_front();
+        }
+        qint64 average = 0;
+        for (int i = 0; i < m_readstallQueue[cmd].size(); i++) {
+            average += m_readstallQueue[cmd].at(i);
+        }
+        m_readstallAverage[cmd] = average / m_readstallQueue[cmd].size();
+    }
+#endif
+
+    if ((response.size() >= responseLen) || readStallHappened)
+    {
+        if (isFrameDumpCommand) frameDumpFailedCnt = 0;
+        emit commandResult(OpenMVPluginSerialPortCommandResult(true, response.left(responseLen)));
     }
     else
     {
-        emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
+        if (isFrameDumpCommand && (frameDumpFailedCnt <= 10)) {
+            frameDumpFailedCnt++;
+            emit commandResult(OpenMVPluginSerialPortCommandResult(true, QByteArray()));
+        } else {
+            if (m_port) {
+                delete m_port;
+                m_port = Q_NULLPTR;
+            }
+            emit commandResult(OpenMVPluginSerialPortCommandResult(false, QByteArray()));
+        }
     }
 
     if (command.m_perCommandWait) {
-        // Execute commands slowly so as to not overload the OpenMV Cam board.
-        QThread::msleep(Utils::HostOsInfo::isMacHost() ? 2 : 1);
+        int wait = (m_override_per_command_wait >= 0) ?
+            m_override_per_command_wait :
+            (Utils::HostOsInfo::isMacHost() ? 2 : 1);
+        if (wait > 0) QThread::msleep(wait);
     }
 }
 

@@ -608,6 +608,9 @@ QPair<QStringList, QStringList> filterPorts(const QString &serialNumberFilter,
 
 void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePath, bool forceFlashFSErase, bool justEraseFlashFs, bool installTheLatestDevelopmentFirmware, bool waitForCamera)
 {
+    forceBootloader = false;
+    forceFlashFSErase = false;
+
     if(!m_working)
     {
         if(m_connect_disconnect)
@@ -639,7 +642,7 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
         {
             QPair<QStringList, QStringList> output = filterPorts(m_serialNumberFilter, forceBootloader, m_availableWifiPorts);
             stringList = output.first;
-            dfuDevices = output.second;
+            // dfuDevices = output.second;
             if(waitForCamera && stringList.isEmpty()) QApplication::processEvents();
         }
         while(waitForCamera && stringList.isEmpty() && (!waitForCameraTimeout.hasExpired(10000)));
@@ -667,7 +670,7 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
             && (m_autoUpdate != QStringLiteral("release"))
             && (m_autoUpdate != QStringLiteral("developement")))
             {
-                forceBootloaderBricked = true;
+                // forceBootloaderBricked = true;
             }
             else
             {
@@ -1191,16 +1194,51 @@ void OpenMVPlugin::connectClicked(bool forceBootloader, QString forceFirmwarePat
                 *patch2Ptr = patch;
             });
 
+            QProgressDialog dialog(Tr::tr("Connecting...\n\n(Hit cancel if this takes more than 5 seconds)."), Tr::tr("Cancel"), 0, 0, Core::ICore::dialogParent(),
+               Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::CustomizeWindowHint |
+               (Utils::HostOsInfo::isLinuxHost() ? Qt::WindowDoesNotAcceptFocus : Qt::WindowType(0)));
+            dialog.setWindowModality(Qt::ApplicationModal);
+            dialog.setAttribute(Qt::WA_ShowWithoutActivating);
+
             QEventLoop loop;
 
             connect(m_iodevice, &OpenMVPluginIO::firmwareVersion,
                     &loop, &QEventLoop::quit);
 
+            connect(&dialog, &QProgressDialog::canceled,
+                    &loop, &QEventLoop::quit);
+
             m_iodevice->getFirmwareVersion();
 
+            dialog.show();
             loop.exec();
 
             disconnect(conn);
+
+            if (dialog.wasCanceled()) {
+                // Show a temporary dialog informing user that cleanup is in progress
+                QProgressDialog closingDialog(
+                    Tr::tr("Closing connection..."), QString(), 0, 0, Core::ICore::dialogParent(),
+                    Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::CustomizeWindowHint
+                );
+                closingDialog.setWindowModality(Qt::ApplicationModal);
+                closingDialog.setCancelButton(nullptr);
+                closingDialog.setAutoClose(false);
+                closingDialog.setAutoReset(false);
+                closingDialog.show();
+                QApplication::processEvents();
+
+                QEventLoop m_loop;
+                connect(m_iodevice, &OpenMVPluginIO::closeResponse, &m_loop, &QEventLoop::quit);
+                m_iodevice->close();
+                m_loop.exec();
+
+                closingDialog.close(); // Hide the "closing" dialog
+
+                m_working = false;
+                QTimer::singleShot(0, this, &OpenMVPlugin::workingDone);
+                return;
+            }
 
             if((!major2) && (!minor2) && (!patch2))
             {
@@ -3999,7 +4037,10 @@ void OpenMVPlugin::stopClicked()
         ///////////////////////////////////////////////////////////////////////
 
         m_fpsLabel->setText(Tr::tr("FPS: 0"));
-        m_frameBuffer->rotation = 0;
+        // m_frameBuffer->rotation = 0;
+
+        /* clear frame buffer */
+        m_frameBuffer->frameBufferData(QPixmap());
 
         ///////////////////////////////////////////////////////////////////////
 

@@ -44,6 +44,8 @@ OpenMVPlugin::OpenMVPlugin() : IPlugin()
     m_portPath = QString();
     m_formKey = QString();
 
+    m_disable_source_updater = false;
+
     m_serialNumberFilter = QString();
     m_errorFilterRegex = QRegularExpression(QStringLiteral(
         "  File \"(.+?)\", line (\\d+).*?\n"
@@ -495,6 +497,8 @@ bool OpenMVPlugin::initialize(const QStringList &arguments, QString *errorMessag
             exit(-1);
         }
     }
+
+    m_disable_source_updater = settings->value(QStringLiteral(DISABLE_RESOURCE_UPDATER), false).toBool();
 
     settings->endGroup();
 
@@ -1198,6 +1202,33 @@ void OpenMVPlugin::extensionsInitialized()
     m_stopOnConnectDiconnectionAction->setCheckable(true);
     m_stopOnConnectDiconnectionAction->setChecked(!m_disableStop);
     m_stopOnConnectDiconnectionAction->setDisabled(m_disableStop);
+
+    /* Add Options */
+    toolsMenu->addSeparator();
+    // Create the action
+    m_disableSourceUpdaterAction = new QAction(Tr::tr("Disable Auto Resource Update"), this);
+    m_disableSourceUpdaterAction->setToolTip(Tr::tr("Disable automatic resource update when the device connects or disconnects. This prevents the IDE from syncing source files automatically."));
+    m_disableSourceUpdaterAction->setCheckable(true);
+    m_disableSourceUpdaterAction->setChecked(m_disable_source_updater); // reflect current state
+
+    // Register the action with the action manager
+    Core::Command *m_disableSourceUpdaterCommand = Core::ActionManager::registerAction(
+        m_disableSourceUpdaterAction,
+        Utils::Id("OpenMV.DisableSourceUpdater")
+    );
+    toolsMenu->addSeparator();
+    toolsMenu->addAction(m_disableSourceUpdaterCommand);
+
+    // Connect toggle to update internal variable and save to settings
+    connect(m_disableSourceUpdaterAction, &QAction::toggled, this, [this](bool checked) {
+        m_disable_source_updater = checked;
+
+        // Save to QSettings
+        QSettings *settings = ExtensionSystem::PluginManager::settings();
+        settings->beginGroup(QStringLiteral(SETTINGS_GROUP));
+        settings->setValue(QStringLiteral(DISABLE_RESOURCE_UPDATER), m_disable_source_updater);
+        settings->endGroup();
+    });
 
     toolsMenu->addSeparator();
     m_saveAction = new QAction(Tr::tr("Save open script to CanMV Board (as main.py)"), this);
@@ -2663,7 +2694,9 @@ void OpenMVPlugin::extensionsInitialized()
         }
     });
 #else
-    QTimer::singleShot(0, this, &OpenMVPlugin::packageUpdate);
+    if(!m_disable_source_updater) {
+        QTimer::singleShot(0, this, &OpenMVPlugin::packageUpdate);
+    }
 #endif
 }
 

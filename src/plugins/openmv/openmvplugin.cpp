@@ -1210,52 +1210,54 @@ void OpenMVPlugin::extensionsInitialized()
     m_saveFileCommand = Core::ActionManager::registerAction(m_saveFileAction, Utils::Id("OpenMV.SaveFile"));
     toolsMenu->addAction(m_saveFileCommand);
     m_saveFileAction->setEnabled(false);
-    connect(m_saveFileAction, &QAction::triggered, this, [this](){
+
+    connect(m_saveFileAction, &QAction::triggered, this, [this]() {
         qDebug() << "Save file";
+
         QDialog *dialog = new QDialog(Core::ICore::dialogParent(),
-                                      Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
-                                          (Utils::HostOsInfo::isMacHost() ? Qt::WindowType(0) : Qt::WindowCloseButtonHint));
+                                    Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint |
+                                    Qt::WindowSystemMenuHint | (Utils::HostOsInfo::isMacHost() ? Qt::WindowType(0) : Qt::WindowCloseButtonHint));
         dialog->setWindowTitle(Tr::tr("Save file to CanMV Board"));
 
         QVBoxLayout *v_layout = new QVBoxLayout(dialog);
 
-        QLabel *label = new QLabel(Tr::tr("Select a file save to spec path"));
-        v_layout->addWidget(label);
+        QLabel *targetPathLabel = new QLabel(Tr::tr("Select file and enter optional target path:"));
+        v_layout->addWidget(targetPathLabel);
 
-        QLineEdit *filePathEdit = new QLineEdit(Tr::tr("filename.ext or /pathto/filename.ext"));
-        v_layout->addWidget(filePathEdit);
+        QWidget *fileSelectWidget = new QWidget();
+        QHBoxLayout *fileSelectLayout = new QHBoxLayout(fileSelectWidget);
 
-        QWidget *widget = new QWidget();
-        QHBoxLayout *h_layout = new QHBoxLayout(widget);
-
-        QLineEdit *fileNameEdit = new QLineEdit(Tr::tr("Please select a file"));
+        QLineEdit *fileNameEdit = new QLineEdit();
         fileNameEdit->setReadOnly(true);
-        h_layout->addWidget(fileNameEdit);
+        fileNameEdit->setPlaceholderText(Tr::tr("Please select a file"));
+        fileSelectLayout->addWidget(fileNameEdit);
 
-        QPushButton *openFileBtn = new QPushButton(Tr::tr("Open"), widget);
-        h_layout->addWidget(openFileBtn);
+        QPushButton *openFileBtn = new QPushButton(Tr::tr("Open"));
+        fileSelectLayout->addWidget(openFileBtn);
+
+        v_layout->addWidget(fileSelectWidget);
+
+        QLineEdit *filePathEdit = new QLineEdit();
+        filePathEdit->setPlaceholderText(Tr::tr("/sdcard/xxxx or /data/xxxx or xxxx"));
+        v_layout->addWidget(filePathEdit);
 
         connect(openFileBtn, &QPushButton::clicked, this, [this, fileNameEdit] {
             QSettings *settings = ExtensionSystem::PluginManager::settings();
             settings->beginGroup(QStringLiteral(SETTINGS_GROUP));
 
+            QString lastDir = settings->value(QStringLiteral("LastOpenFileToSave"), QDir::homePath()).toString();
             QString fileName = QFileDialog::getOpenFileName(Core::ICore::dialogParent(),
-                                                            QObject::tr("Select file send to CanMV board"),
-                                                            settings->value(QStringLiteral("LastOpenFileToSave"), QDir::homePath()).toString(),
+                                                            QObject::tr("Select file to send to CanMV board"),
+                                                            lastDir,
                                                             Tr::tr("All Files (*.*)"));
 
-            if(!fileName.isEmpty())
-            {
+            if (!fileName.isEmpty()) {
                 fileNameEdit->setText(fileName);
-
                 QFileInfo fi(fileName);
-
                 settings->setValue(QStringLiteral("LastOpenFileToSave"), fi.path());
             }
             settings->endGroup();
         });
-
-        v_layout->addWidget(widget);
 
         QDialogButtonBox *box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
         v_layout->addWidget(box);
@@ -1271,48 +1273,49 @@ void OpenMVPlugin::extensionsInitialized()
         connect(box, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
         connect(box, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
 
-        if(dialog->exec() == QDialog::Accepted) {
-            QString fileName = fileNameEdit->text();
-            QString targetPath = filePathEdit->text();
+        if (dialog->exec() == QDialog::Accepted) {
+            QString fileName = fileNameEdit->text().trimmed();
+            QString targetPath = filePathEdit->text().trimmed();
+
+            if (fileName.isEmpty()) {
+                QMessageBox::warning(Core::ICore::dialogParent(), Tr::tr("Missing Input"),
+                                    Tr::tr("Source file must be specified."));
+                return;
+            }
 
             QFileInfo filInfo(fileName);
             QString newFileName = filInfo.fileName();
 
-            if(targetPath.contains(QStringLiteral(" "))) {
-                targetPath = newFileName;
+            if (targetPath.contains(" ")) {
+                QMessageBox::warning(Core::ICore::dialogParent(), Tr::tr("Invalid Path"),
+                                    Tr::tr("Target path cannot contain spaces."));
+                return;
             }
 
-            qDebug() << fileName << targetPath;
+            if (targetPath.length() > 63) {
+                QMessageBox::critical(Core::ICore::dialogParent(), Tr::tr("Invalid Path"),
+                                    Tr::tr("Target path is too long (max 63 characters)."));
+                return;
+            }
 
             QFile file(fileName);
-
-            if(file.open(QIODevice::ReadOnly)) {
-                QByteArray data = file.readAll();
-
-                if((file.error() == QFile::NoError) && (!data.isEmpty())) {
-                    file.close();
-
-                    // check user spec the path is vaild.
-                    if(targetPath.size() > 63) {
-                        QMessageBox::critical(Core::ICore::dialogParent(),
-                                              tr("Save file to CanMV Cam"),
-                                              tr("%L1 is too long.").arg(fileName));
-                    }
-                    else {
-                        saveFileOverSerial(targetPath, data);
-                    }
-                }
-                else {
-                    QMessageBox::critical(Core::ICore::dialogParent(),
-                                          tr("Save file to CanMV Cam"),
-                                          tr("Read %L1 failed.").arg(fileName));
-                }
+            if (!file.open(QIODevice::ReadOnly)) {
+                QMessageBox::critical(Core::ICore::dialogParent(), Tr::tr("File Error"),
+                                    Tr::tr("Failed to open %1.").arg(fileName));
+                return;
             }
-            else {
-                QMessageBox::critical(Core::ICore::dialogParent(),
-                                      tr("Save file to CanMV Cam"),
-                                      tr("Open %L1 failed.").arg(fileName));
+
+            QByteArray data = file.readAll();
+            file.close();
+
+            if (data.isEmpty()) {
+                QMessageBox::critical(Core::ICore::dialogParent(), Tr::tr("Read Error"),
+                                    Tr::tr("Failed to read data from %1.").arg(fileName));
+                return;
             }
+
+            saveFileOverSerial(targetPath, data);
+            qDebug() << "Saved file to device:" << targetPath;
         }
     });
 
@@ -5445,7 +5448,7 @@ void OpenMVPlugin::saveFileOverSerial(const QString &fileName, const QByteArray 
             m_iodevice->createFile(chunkSize, fileName.toLatin1(), ctxSha256);
             loop.exec();
 
-            // qDebug() << err;
+            qDebug() << fileName << err;
 
             if(USBDBG_SVFILE_ERR_NONE != err) {
                 m_working = false;
